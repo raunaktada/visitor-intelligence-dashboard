@@ -108,6 +108,37 @@ export default function Dashboard() {
     showToast(`Exported ${filtered.length} rows`);
   };
 
+  const exportAll = () => {
+    const sections: string[] = [];
+    let totalRowsExported = 0;
+
+    for (const sheet of dataSheets) {
+      const sheetRows = (allData[sheet] as Row[]) || [];
+      if (!sheetRows.length) continue;
+
+      const sheetHeaders = Object.keys(sheetRows[0]).filter(h => h.trim());
+      const csvLines = [
+        sheetHeaders.join(','),
+        ...sheetRows.map(row =>
+          sheetHeaders.map(h => `"${String(row[h] ?? '').replace(/"/g, '""')}"`).join(',')
+        ),
+      ];
+      sections.push(`## ${sheet}`, ...csvLines, '');
+      totalRowsExported += sheetRows.length;
+    }
+
+    if (!sections.length) return;
+
+    const blob = new Blob([sections.join('\n')], { type: 'text/csv' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href     = url;
+    a.download = 'website_visitors_all_sheets.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast(`Exported ${totalRowsExported} rows across ${dataSheets.length} sheets`);
+  };
+
   const totalRows = rows.length;
   const linkedInKey = headers.find(h => h.toLowerCase().includes('linkedin'));
 
@@ -132,13 +163,16 @@ export default function Dashboard() {
         </div>
         <div className="header-right">
           {lastUpdated && (
-            <span className="last-updated">Updated {lastUpdated.toLocaleTimeString()}</span>
+            <span className="last-updated">Updated {lastUpdated.toLocaleTimeString()} (your local time)</span>
           )}
           <button className="btn btn-primary" onClick={handleSync} disabled={syncing}>
             {syncing ? 'Syncing…' : '⟳ Sync'}
           </button>
           <button className="btn btn-secondary" onClick={exportCSV} disabled={!filtered.length || isSummary}>
-            ↓ Export CSV
+            ↓ Export Tab
+          </button>
+          <button className="btn btn-secondary" onClick={exportAll}>
+            ↓ Export All
           </button>
         </div>
       </header>
@@ -188,7 +222,7 @@ export default function Dashboard() {
                     className={`excel-summary-row ${mapped ? 'clickable' : ''}`}
                     onClick={() => mapped && setActiveTab(mapped)}
                   >
-                    <span>{colB}</span>
+                    <span>{mapped || colB}</span>
                     {mapped && (
                       <span className="excel-summary-count">
                         {(allData[mapped] as Row[])?.length ?? 0}
