@@ -127,7 +127,7 @@ export default function Dashboard() {
 
       <header className="dashboard-header">
         <div className="header-left">
-          <h1>Visitor Intelligence</h1>
+          <h1>Website Visitors</h1>
           <span className="brand-badge">TADA</span>
         </div>
         <div className="header-right">
