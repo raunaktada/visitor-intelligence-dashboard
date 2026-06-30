@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAllSheetsData } from './_lib/sharepoint';
+import { getAllSheetsData } from './_lib/sharepoint.js';
 
 // In-memory cache — resets on cold start, which naturally keeps this fresh.
 // Serverless functions have no writable filesystem, so this replaces the

@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getAllSheetsData } from './_lib/sharepoint';
+import { getAllSheetsData } from './_lib/sharepoint.js';
 
 function countRecords(data: Record<string, unknown>): number {
   return Object.entries(data).reduce((sum, [sheet, rows]) => {
