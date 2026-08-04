@@ -520,9 +520,100 @@ body {
   to   { transform: translateY(0);    opacity: 1; }
 }
 
+/* ─── Month bar ──────────────────────────────────────────────────────────────── */
+.month-bar {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.month-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 5px 14px;
+  transition: all 0.15s;
+  white-space: nowrap;
+}
+.month-btn:hover { border-color: var(--accent); color: var(--text); }
+.month-btn-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+/* ─── View toggle (Companies / Individuals) ──────────────────────────────────── */
+.view-toggle-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.view-toggle {
+  display: flex;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.toggle-btn {
+  background: none;
+  border: none;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 18px;
+  transition: all 0.15s;
+}
+.toggle-btn:hover { color: var(--text); }
+.toggle-active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.filters-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+/* ─── Placeholder / coming-soon states ──────────────────────────────────────── */
+.placeholder-state {
+  text-align: center;
+  padding: 80px 20px;
+  color: var(--muted);
+}
+.placeholder-icon { font-size: 48px; margin-bottom: 16px; }
+.placeholder-state h3 { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+.placeholder-state p  { font-size: 14px; max-width: 440px; margin: 0 auto; }
+.placeholder-state code {
+  background: var(--surface2);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 12px;
+  color: var(--accent-h);
+}
+
+/* ─── Domain links + numeric columns ────────────────────────────────────────── */
+.domain-link { color: var(--accent); font-size: 12px; text-decoration: none; }
+.domain-link:hover { color: var(--accent-h); text-decoration: underline; }
+.num-col { text-align: right; font-variant-numeric: tabular-nums; }
+
 /* ─── Responsive ─────────────────────────────────────────────────────────────── */
 @media (max-width: 768px) {
   .stats-row { grid-template-columns: 1fr 1fr; }
   .dashboard-header { flex-direction: column; align-items: flex-start; }
   .result-count { margin-left: 0; }
+  .view-toggle-bar { flex-direction: column; align-items: flex-start; }
+  .filters-right { width: 100%; }
 }
