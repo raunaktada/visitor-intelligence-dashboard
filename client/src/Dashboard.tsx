@@ -177,6 +177,18 @@ export default function Dashboard() {
     );
   }, [tabCompanies, search]);
 
+  // Map domain → individuals for inline display in company rows
+  const individualsByDomain = useMemo(() => {
+    const map = new Map<string, Individual[]>();
+    for (const p of individuals) {
+      const d = domainFromUrl(p.website);
+      if (!d) continue;
+      if (!map.has(d)) map.set(d, []);
+      map.get(d)!.push(p);
+    }
+    return map;
+  }, [individuals]);
+
   // Individuals — always all-time (Artisan has no monthly breakdown)
   const tabIndividuals: Individual[] = useMemo(() => {
     if (activeTab === 'under1b') return [];
@@ -405,18 +417,34 @@ export default function Dashboard() {
               {filtered.length === 0 ? (
                 <tr><td colSpan={5} className="empty-state">No companies match your search</td></tr>
               ) : filtered.map((c, i) => {
-                const contacts = CUSTOMER_DOMAINS.has(c.domain) ? (CUSTOMER_CONTACTS[c.domain] ?? []) : [];
+                // SharePoint contacts (Customers tab only)
+                const spContacts = CUSTOMER_DOMAINS.has(c.domain) ? (CUSTOMER_CONTACTS[c.domain] ?? []) : [];
+                // Artisan individuals matched by domain
+                const artisanPeople = individualsByDomain.get(c.domain) ?? [];
+                // Artisan names already in SP contacts — deduplicate
+                const spNames = new Set(spContacts.map(p => p.name.toLowerCase()));
+                const extraPeople = artisanPeople.filter(p =>
+                  !spNames.has(`${p.firstName} ${p.lastName}`.toLowerCase())
+                );
                 return (
                   <tr key={i}>
                     <td>
                       <div>{c.name}</div>
-                      {contacts.length > 0 && (
+                      {(spContacts.length > 0 || extraPeople.length > 0) && (
                         <div className="contact-list">
-                          {contacts.map((p, j) => (
-                            <span key={j} className="contact-chip">
+                          {spContacts.map((p, j) => (
+                            <span key={`sp-${j}`} className="contact-chip">
                               {p.linkedin
                                 ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.name}</a>
                                 : p.name}
+                              <span className="contact-title">{p.title}</span>
+                            </span>
+                          ))}
+                          {extraPeople.map((p, j) => (
+                            <span key={`art-${j}`} className="contact-chip">
+                              {p.linkedin
+                                ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.firstName} {p.lastName}</a>
+                                : `${p.firstName} ${p.lastName}`}
                               <span className="contact-title">{p.title}</span>
                             </span>
                           ))}
