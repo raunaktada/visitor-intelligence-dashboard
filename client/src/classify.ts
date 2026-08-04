@@ -1,5 +1,45 @@
 export type TabId = 'customers' | 'industrial' | 'healthcare' | 'cpg' | 'other' | 'under1b';
 
+export interface CustomerContact {
+  name: string;
+  title: string;
+  linkedin: string;
+}
+
+// Contacts per customer company (from Customers & Partners SharePoint sheet)
+export const CUSTOMER_CONTACTS: Record<string, CustomerContact[]> = {
+  'caterpillar.com': [
+    { name: 'Jarrod Stock',    title: 'Senior Market Research Consultant',    linkedin: 'https://www.linkedin.com/in/jarrod-stock-590a9b32' },
+    { name: 'Michael Wheeler', title: 'Senior Global Category Manager',        linkedin: 'https://www.linkedin.com/in/michael-wheeler-1372b5161' },
+    { name: 'Jan Gooderham',   title: 'Workday People Experience Administrator', linkedin: 'https://www.linkedin.com/in/jan-gooderham-8890b588' },
+  ],
+  'cummins.com': [
+    { name: 'Leelakrishnan N. Parthiban', title: 'Site Quality Leader', linkedin: 'https://www.linkedin.com/in/leelakrishnan' },
+  ],
+  'gehealthcare.com': [
+    { name: 'Valerie Serafin', title: 'Senior Neurology Account Manager', linkedin: 'https://www.linkedin.com/in/valerie-serafin-84045413' },
+  ],
+  'oshkoshcorp.com': [
+    { name: 'Michael Conger',    title: 'Senior Technical Support Specialist', linkedin: 'https://www.linkedin.com/in/michael-conger-0512492a' },
+    { name: 'Stephanie Schreiber', title: 'Environmental Lead (Oshkosh Defense)', linkedin: 'https://www.linkedin.com/in/stephanie-schreiber-b0a06ba0' },
+  ],
+  'osfhealthcare.org': [
+    { name: 'Bethany Franciskovich', title: 'Project Assistant, Performance Improvement', linkedin: 'https://www.linkedin.com/in/bethany-harper94' },
+  ],
+  'steelscape.com': [
+    { name: 'Edgar Tomlin', title: 'Operations', linkedin: 'https://www.linkedin.com/in/edgar-tomlin-7429b26' },
+  ],
+  'pointcore.com': [
+    { name: 'Terra Morton',      title: 'IT Project Manager',                     linkedin: 'https://www.linkedin.com/in/terra-morton-444b0771' },
+    { name: 'Jami MasterCard',   title: 'Brand Manager',                           linkedin: 'https://www.linkedin.com/in/jamimcclain14' },
+    { name: 'Anupama Uddavolu',  title: 'Supply Chain Contract Administrator',     linkedin: 'https://www.linkedin.com/in/anupama-uddavolu-2628455b' },
+    { name: 'Lindsey Mroz, MBA', title: 'Program Manager',                         linkedin: 'https://www.linkedin.com/in/lindsey-mroz-mba-07846a78' },
+  ],
+  'thewheelgroup.com': [
+    { name: 'Wade Kawasaki', title: 'Chief Executive Officer', linkedin: 'https://www.linkedin.com/in/wadek' },
+  ],
+};
+
 // TADA's known customers (from Customers & Partners SharePoint sheet)
 export const CUSTOMER_DOMAINS: Set<string> = new Set([
   'caterpillar.com',

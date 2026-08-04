@@ -604,6 +604,37 @@ body {
   color: var(--accent-h);
 }
 
+/* ─── Customer contact chips ─────────────────────────────────────────────────── */
+.contact-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 6px;
+}
+
+.contact-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 2px 10px 2px 8px;
+  font-size: 11px;
+}
+
+.contact-link {
+  color: var(--accent-h);
+  text-decoration: none;
+  font-weight: 600;
+}
+.contact-link:hover { text-decoration: underline; }
+
+.contact-title {
+  color: var(--muted);
+  font-size: 10px;
+}
+
 /* ─── Domain links + numeric columns ────────────────────────────────────────── */
 .domain-link { color: var(--accent); font-size: 12px; text-decoration: none; }
 .domain-link:hover { color: var(--accent-h); text-decoration: underline; }

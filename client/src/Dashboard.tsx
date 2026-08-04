@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import './Dashboard.css';
-import { classifyCompany, TabId } from './classify';
+import { classifyCompany, TabId, CUSTOMER_CONTACTS, CUSTOMER_DOMAINS } from './classify';
 
 interface Company {
   name: string;
@@ -404,24 +404,36 @@ export default function Dashboard() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr><td colSpan={5} className="empty-state">No companies match your search</td></tr>
-              ) : filtered.map((c, i) => (
-                <tr key={i}>
-                  <td>{c.name}</td>
-                  <td>
-                    <a
-                      href={`https://${c.domain}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="domain-link"
-                    >
-                      {c.domain}
-                    </a>
-                  </td>
-                  <td className="num-col">{c.users}</td>
-                  <td className="num-col">{c.sessions}</td>
-                  <td className="num-col">{c.views}</td>
-                </tr>
-              ))}
+              ) : filtered.map((c, i) => {
+                const contacts = CUSTOMER_DOMAINS.has(c.domain) ? (CUSTOMER_CONTACTS[c.domain] ?? []) : [];
+                return (
+                  <tr key={i}>
+                    <td>
+                      <div>{c.name}</div>
+                      {contacts.length > 0 && (
+                        <div className="contact-list">
+                          {contacts.map((p, j) => (
+                            <span key={j} className="contact-chip">
+                              {p.linkedin
+                                ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.name}</a>
+                                : p.name}
+                              <span className="contact-title">{p.title}</span>
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </td>
+                    <td>
+                      <a href={`https://${c.domain}`} target="_blank" rel="noopener noreferrer" className="domain-link">
+                        {c.domain}
+                      </a>
+                    </td>
+                    <td className="num-col">{c.users}</td>
+                    <td className="num-col">{c.sessions}</td>
+                    <td className="num-col">{c.views}</td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
