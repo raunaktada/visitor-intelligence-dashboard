@@ -1,8 +1,16 @@
 export type TabId = 'customers' | 'industrial' | 'healthcare' | 'cpg' | 'other' | 'under1b';
 
-// Add known TADA customer domains here to populate the Customers tab
+// TADA's known customers (from Customers & Partners SharePoint sheet)
 export const CUSTOMER_DOMAINS: Set<string> = new Set([
-  // e.g. 'caterpillar.com', 'osfhealthcare.org'
+  'caterpillar.com',
+  'cummins.com',
+  'gehealthcare.com',
+  'oshkoshcorp.com',
+  'defense.oshkoshcorp.com',
+  'osfhealthcare.org',
+  'steelscape.com',
+  'pointcore.com',
+  'thewheelgroup.com',
 ]);
 
 // High-precision domain overrides (checked before keyword matching)
