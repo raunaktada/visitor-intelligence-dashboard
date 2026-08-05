@@ -264,7 +264,6 @@ export default function Dashboard() {
       <header className="dashboard-header">
         <div className="header-left">
           <h1>Website Visitors</h1>
-          <span className="brand-badge">TADA</span>
         </div>
         <div className="header-right">
           <button
