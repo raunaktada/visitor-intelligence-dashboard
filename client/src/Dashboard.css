@@ -635,6 +635,31 @@ body {
   font-size: 10px;
 }
 
+/* ─── Individuals grouped by company ────────────────────────────────────────── */
+.company-group {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 16px;
+}
+.company-group:last-child { border-bottom: none; }
+.company-group-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+.company-group-name {
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+.company-group-count {
+  font-size: 11px;
+  color: var(--muted);
+  background: var(--surface2);
+  border-radius: 10px;
+  padding: 1px 8px;
+}
+
 /* ─── Domain links + numeric columns ────────────────────────────────────────── */
 .domain-link { color: var(--accent); font-size: 12px; text-decoration: none; }
 .domain-link:hover { color: var(--accent-h); text-decoration: underline; }

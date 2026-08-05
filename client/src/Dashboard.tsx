@@ -368,38 +368,34 @@ export default function Dashboard() {
         </div>
       ) : viewMode === 'individuals' ? (
         <div className="table-wrapper">
-          <table className="visitors-table">
-            <thead>
-              <tr>
-                <th>Name</th>
-                <th>Title</th>
-                <th>Company</th>
-                <th>Location</th>
-                <th>Page Views</th>
-                <th>LinkedIn</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredIndividuals.length === 0 ? (
-                <tr><td colSpan={6} className="empty-state">No individuals match your search</td></tr>
-              ) : filteredIndividuals.map((p, i) => (
-                <tr key={i}>
-                  <td>{p.firstName} {p.lastName}</td>
-                  <td className="secondary-text">{p.title}</td>
-                  <td>{p.company}</td>
-                  <td className="secondary-text">{[p.city, p.state].filter(Boolean).join(', ')}</td>
-                  <td className="num-col">{p.pageViews}</td>
-                  <td>
-                    {p.linkedin && (
-                      <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="linkedin-link">
-                        View ↗
-                      </a>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          {filteredIndividuals.length === 0 ? (
+            <div className="empty-state">No individuals match your search</div>
+          ) : (() => {
+            const groups = new Map<string, Individual[]>();
+            for (const p of filteredIndividuals) {
+              const key = p.company || 'Unknown';
+              if (!groups.has(key)) groups.set(key, []);
+              groups.get(key)!.push(p);
+            }
+            return Array.from(groups.entries()).map(([company, people]) => (
+              <div key={company} className="company-group">
+                <div className="company-group-header">
+                  <span className="company-group-name">{company}</span>
+                  <span className="company-group-count">{people.length} {people.length === 1 ? 'person' : 'people'}</span>
+                </div>
+                <div className="contact-list">
+                  {people.map((p, i) => (
+                    <span key={i} className="contact-chip">
+                      {p.linkedin
+                        ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.firstName} {p.lastName}</a>
+                        : `${p.firstName} ${p.lastName}`}
+                      {p.title && <span className="contact-title">{p.title}</span>}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ));
+          })()}
         </div>
       ) : (
         <div className="table-wrapper">
@@ -416,41 +412,9 @@ export default function Dashboard() {
             <tbody>
               {filtered.length === 0 ? (
                 <tr><td colSpan={5} className="empty-state">No companies match your search</td></tr>
-              ) : filtered.map((c, i) => {
-                // SharePoint contacts (Customers tab only)
-                const spContacts = CUSTOMER_DOMAINS.has(c.domain) ? (CUSTOMER_CONTACTS[c.domain] ?? []) : [];
-                // Artisan individuals matched by domain
-                const artisanPeople = individualsByDomain.get(c.domain) ?? [];
-                // Artisan names already in SP contacts — deduplicate
-                const spNames = new Set(spContacts.map(p => p.name.toLowerCase()));
-                const extraPeople = artisanPeople.filter(p =>
-                  !spNames.has(`${p.firstName} ${p.lastName}`.toLowerCase())
-                );
-                return (
+              ) : filtered.map((c, i) => (
                   <tr key={i}>
-                    <td>
-                      <div>{c.name}</div>
-                      {(spContacts.length > 0 || extraPeople.length > 0) && (
-                        <div className="contact-list">
-                          {spContacts.map((p, j) => (
-                            <span key={`sp-${j}`} className="contact-chip">
-                              {p.linkedin
-                                ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.name}</a>
-                                : p.name}
-                              <span className="contact-title">{p.title}</span>
-                            </span>
-                          ))}
-                          {extraPeople.map((p, j) => (
-                            <span key={`art-${j}`} className="contact-chip">
-                              {p.linkedin
-                                ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.firstName} {p.lastName}</a>
-                                : `${p.firstName} ${p.lastName}`}
-                              <span className="contact-title">{p.title}</span>
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                    </td>
+                    <td>{c.name}</td>
                     <td>
                       <a href={`https://${c.domain}`} target="_blank" rel="noopener noreferrer" className="domain-link">
                         {c.domain}
@@ -460,8 +424,7 @@ export default function Dashboard() {
                     <td className="num-col">{c.sessions}</td>
                     <td className="num-col">{c.views}</td>
                   </tr>
-                );
-              })}
+              ))}
             </tbody>
           </table>
         </div>
