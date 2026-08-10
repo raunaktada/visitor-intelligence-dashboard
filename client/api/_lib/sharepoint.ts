@@ -36,35 +36,35 @@ const OLD_TO_NEW: Record<string, string> = {
 };
 
 const REVENUE_OVERRIDES: Record<string, string> = {
-  'lockheed martin':     '$71.0B',
-  'kbr inc.':            '$7.4B',
-  'kbr inc':             '$7.4B',
-  '3m':                  '$24.6B',
-  'parker hannifin':     '$19.9B',
-  'grainger':            '$16.5B',
-  'domtar':              '$5.4B',
-  'adentra group':       '$2.3B',
-  'siemens':             '$90.4B',
-  'mccormick fona':      '$6.7B',
-  'adventhealth':        '$9.0B',
-  'trimedx':             '$0.3B',
-  'peloton interactive': '$0.7B',
-  'lozier corporation':  '$0.5B',
-  'oshkosh defense':     '$10.1B',
-  'bd':                  '$20.2B',
-  'becton dickinson':    '$20.2B',
-  'bd (becton dickinson)': '$20.2B',
-  'examworks':           '$1.2B',
-  'sciex':               '$1.0B',
-  'parker lord':         '$1.1B',
-  'ab inbev':            '$57.7B',
-  'a inev':              '$57.7B', // corrupted "AB InBev" in source data
-  'solar turbines':      '$3.1B',
-  'solar turines':       '$3.1B', // typo in source data
-  'crate and barrel':    '$2.5B',
-  'crate & barrel':      '$2.5B',
-  'crate and arrel':     '$2.5B', // typo in source data
-  'milton cat':          '$0.72B',
+  'lockheed martin':     '$71.0',
+  'kbr inc.':            '$7.4',
+  'kbr inc':             '$7.4',
+  '3m':                  '$24.6',
+  'parker hannifin':     '$19.9',
+  'grainger':            '$16.5',
+  'domtar':              '$5.4',
+  'adentra group':       '$2.3',
+  'siemens':             '$90.4',
+  'mccormick fona':      '$6.7',
+  'adventhealth':        '$9.0',
+  'trimedx':             '$0.3',
+  'peloton interactive': '$0.7',
+  'lozier corporation':  '$0.5',
+  'oshkosh defense':     '$10.1',
+  'bd':                  '$20.2',
+  'becton dickinson':    '$20.2',
+  'bd (becton dickinson)': '$20.2',
+  'examworks':           '$1.2',
+  'sciex':               '$1.0',
+  'parker lord':         '$1.1',
+  'ab inbev':            '$57.7',
+  'a inev':              '$57.7', // corrupted "AB InBev" in source data
+  'solar turbines':      '$3.1',
+  'solar turines':       '$3.1', // typo in source data
+  'crate and barrel':    '$2.5',
+  'crate & barrel':      '$2.5',
+  'crate and arrel':     '$2.5', // typo in source data
+  'milton cat':          '$0.72',
 };
 
 export const SHEET_NAMES = [
@@ -153,7 +153,7 @@ const OLD_FILE_TYPOS: Record<string, string> = {
   'p p.l.c.':                   'BP p.l.c.',
   'target rands, inc':          'Target Brands, Inc',
   'procter & gamle':            'Procter & Gamble',
-  'h-e-':                       'H-E-B',
+  'h-e-':                       'H-E-',
   'ulta eauty':                 'Ulta Beauty',
   'en e. keith foods':          'Ben E. Keith Foods',
   'the lurizol corporation':    'The Lubrizol Corporation',
