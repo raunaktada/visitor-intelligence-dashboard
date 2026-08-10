@@ -57,6 +57,12 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'examworks':           '$1.2B',
   'sciex':               '$1.0B',
   'parker lord':         '$1.1B',
+  'ab inbev':            '$57.7B',
+  'a inev':              '$57.7B', // corrupted "AB InBev" in source data
+  'solar turbines':      '$3.1B',
+  'crate and barrel':    '$2.5B',
+  'crate & barrel':      '$2.5B',
+  'milton cat':          '$0.72B',
 };
 
 export const SHEET_NAMES = [
