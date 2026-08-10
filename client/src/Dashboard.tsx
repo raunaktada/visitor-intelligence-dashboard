@@ -47,7 +47,7 @@ function cleanRevenue(raw: string): string {
   // Ensure $ prefix
   if (s && !s.startsWith('$')) s = '$' + s;
   // Remove spaces: "$ 0.9 B" → "$0.9B"
-  s = s.replace(/\$\s+/, '$').replace(/\s+B$/i, 'B');
+  s = s.replace(/\$\s+/, '$').replace(/\s*B$/i, '');
   return s;
 }
 
