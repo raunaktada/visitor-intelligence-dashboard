@@ -1,125 +1,42 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import './Dashboard.css';
-import { classifyCompany, TabId, CUSTOMER_CONTACTS, CUSTOMER_DOMAINS } from './classify';
 
+const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'];
+
+type TabId = 'customers' | 'defense' | 'datacenter' | 'manufacturing' | 'healthcare' | 'cpg' | 'under1b';
+
+interface MonthData { users: number; sessions: number; views: number; }
+interface Contact { name: string; title: string; email: string; linkedin: string; pageViewed: number; }
 interface Company {
   name: string;
-  domain: string;
-  users: number;
-  sessions: number;
-  views: number;
+  revenue: string;
+  category?: string;
+  months: Record<string, MonthData>;
+  contacts: Contact[];
 }
 
-interface Individual {
-  firstName: string;
-  lastName: string;
-  email: string;
-  company: string;
-  title: string;
-  website: string;
-  pageViews: number;
-  city: string;
-  state: string;
-  linkedin: string;
-}
-
-const MONTHS = [
-  { key: 'feb', label: 'Feb 2026', file: '/data/feb-2026.csv' },
-  { key: 'mar', label: 'Mar 2026', file: '/data/mar-2026.csv' },
-  { key: 'apr', label: 'Apr 2026', file: '/data/apr-2026.csv' },
-  { key: 'may', label: 'May 2026', file: '/data/may-2026.csv' },
-  { key: 'jun', label: 'Jun 2026', file: '/data/jun-2026.csv' },
-  { key: 'jul', label: 'Jul 2026', file: '/data/jul-2026.csv' },
+const TABS: { id: TabId; label: string; sheet: string }[] = [
+  { id: 'customers',     label: 'Customers & Partners',       sheet: 'Customers & Partners' },
+  { id: 'defense',       label: 'Defense Manufacturers',      sheet: 'Defense Manufacturers - 1B+' },
+  { id: 'datacenter',    label: 'Data Center Manufacturers',  sheet: 'Data Center Mfg - 1B+' },
+  { id: 'manufacturing', label: 'Manufacturing',              sheet: 'Manufacturing - 1B+' },
+  { id: 'healthcare',    label: 'Healthcare / MedTech',       sheet: 'Healthcare_MedTech - 1B+' },
+  { id: 'cpg',           label: 'CPG',                        sheet: 'CPG - 1B+' },
+  { id: 'under1b',       label: 'Under $1B',                  sheet: 'Under $1B (250M-1B)' },
 ];
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'customers',  label: 'Customers' },
-  { id: 'industrial', label: 'Industrial Manufacturers' },
-  { id: 'healthcare', label: 'Healthcare / Medtech / Hospitals' },
-  { id: 'cpg',        label: 'CPG' },
-  { id: 'other',      label: 'Other Manufacturers' },
-  { id: 'under1b',    label: 'Under $1B' },
-];
-
-function parseCSV(text: string): Company[] {
-  return text
-    .trim()
-    .split('\n')
-    .slice(1)
-    .flatMap(line => {
-      const m = line.match(/^"([^"]*)","([^"]*)","([^"]*)","([^"]*)","([^"]*)"$/);
-      if (!m) return [];
-      return [{ name: m[1], domain: m[2], users: +m[3], sessions: +m[4], views: +m[5] }];
-    });
-}
-
-function parseIndividuals(text: string): Individual[] {
-  const lines = text.trim().split('\n');
-  // header: first_name,last_name,email,company_name,title,website,last_seen_at,page_views,city,state,linkedin_url
-  return lines.slice(1).flatMap(line => {
-    // Split on commas but respect quoted fields
-    const fields: string[] = [];
-    let cur = '', inQ = false;
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i];
-      if (ch === '"') { inQ = !inQ; }
-      else if (ch === ',' && !inQ) { fields.push(cur); cur = ''; }
-      else { cur += ch; }
-    }
-    fields.push(cur);
-    if (fields.length < 11) return [];
-    return [{
-      firstName: fields[0].trim(),
-      lastName:  fields[1].trim(),
-      email:     fields[2].trim(),
-      company:   fields[3].trim(),
-      title:     fields[4].trim(),
-      website:   fields[5].trim(),
-      pageViews: parseInt(fields[7]) || 0,
-      city:      fields[8].trim(),
-      state:     fields[9].trim(),
-      linkedin:  fields[10].trim(),
-    }];
-  });
-}
-
-function domainFromUrl(url: string): string {
-  try {
-    return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '');
-  } catch {
-    return url.toLowerCase().replace(/^www\./, '');
-  }
-}
-
-function deduplicateByDomain(companies: Company[]): Company[] {
-  const map = new Map<string, Company>();
-  for (const c of companies) {
-    const key = c.domain.toLowerCase();
-    const existing = map.get(key);
-    if (existing) {
-      map.set(key, {
-        ...existing,
-        users:    existing.users    + c.users,
-        sessions: existing.sessions + c.sessions,
-        views:    existing.views    + c.views,
-      });
-    } else {
-      map.set(key, { ...c });
-    }
-  }
-  return Array.from(map.values()).sort((a, b) => b.users - a.users);
-}
+const API_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5001';
 
 export default function Dashboard() {
-  const [monthData,     setMonthData]     = useState<Record<string, Company[]>>({});
-  const [individuals,   setIndividuals]   = useState<Individual[]>([]);
-  const [loading,       setLoading]       = useState(true);
-  const [selectedMonth, setSelectedMonth] = useState<string>('all');
-  const [activeTab,     setActiveTab]     = useState<TabId>('industrial');
-  const [viewMode,      setViewMode]      = useState<'companies' | 'individuals'>('companies');
-  const [search,        setSearch]        = useState('');
-  const [toast,         setToast]         = useState('');
+  const [allData,        setAllData]        = useState<Record<string, Company[]>>({});
+  const [loading,        setLoading]        = useState(true);
+  const [error,          setError]          = useState('');
+  const [selectedMonth,  setSelectedMonth]  = useState<string>('all');
+  const [activeTab,      setActiveTab]      = useState<TabId>('customers');
+  const [viewMode,       setViewMode]       = useState<'companies' | 'contacts'>('companies');
+  const [search,         setSearch]         = useState('');
+  const [toast,          setToast]          = useState('');
 
   const showToast = useCallback((msg: string) => {
     setToast(msg);
@@ -127,102 +44,66 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    Promise.all([
-      ...MONTHS.map(async m => {
-        const res  = await fetch(m.file);
-        const text = await res.text();
-        return { key: m.key, companies: parseCSV(text) };
-      }),
-      fetch('/data/individuals-all.csv').then(r => r.text()).then(text => {
-        setIndividuals(parseIndividuals(text));
-        return null;
-      }),
-    ]).then(results => {
-      const data: Record<string, Company[]> = {};
-      for (const r of results) {
-        if (r) data[r.key] = r.companies;
-      }
-      setMonthData(data);
-      setLoading(false);
-    });
+    fetch(`${API_URL}/api/visitors`)
+      .then(r => r.json())
+      .then(data => { setAllData(data); setLoading(false); })
+      .catch(() => { setError('Failed to load data from server.'); setLoading(false); });
   }, []);
 
-  const activeCompanies: Company[] = useMemo(() => {
+  const activeSheet = TABS.find(t => t.id === activeTab)!.sheet;
+  const sheetCompanies: Company[] = useMemo(() => allData[activeSheet] ?? [], [allData, activeSheet]);
+
+  // Compute users/sessions/views for selected month or all-time sum
+  const companiesWithTotals = useMemo(() => sheetCompanies.map(c => {
     if (selectedMonth === 'all') {
-      return deduplicateByDomain(Object.values(monthData).flat());
+      const totals = Object.values(c.months).reduce(
+        (acc, m) => ({ users: acc.users + m.users, sessions: acc.sessions + m.sessions, views: acc.views + m.views }),
+        { users: 0, sessions: 0, views: 0 }
+      );
+      return { ...c, ...totals };
     }
-    return [...(monthData[selectedMonth] ?? [])].sort((a, b) => b.users - a.users);
-  }, [selectedMonth, monthData]);
+    const m = c.months[selectedMonth] ?? { users: 0, sessions: 0, views: 0 };
+    return { ...c, ...m };
+  }).filter(c => selectedMonth === 'all' || c.users > 0 || c.sessions > 0 || c.views > 0)
+    .sort((a, b) => b.users - a.users),
+  [sheetCompanies, selectedMonth]);
 
-  const tabCounts = useMemo(() => {
-    const counts: Record<TabId, number> = {
-      customers: 0, industrial: 0, healthcare: 0, cpg: 0, other: 0, under1b: 0,
-    };
-    for (const c of activeCompanies) {
-      counts[classifyCompany(c.name, c.domain)]++;
-    }
-    return counts;
-  }, [activeCompanies]);
-
-  const tabCompanies: Company[] = useMemo(() => {
-    if (activeTab === 'under1b') return [];
-    return activeCompanies.filter(c => classifyCompany(c.name, c.domain) === activeTab);
-  }, [activeCompanies, activeTab]);
-
-  const filtered: Company[] = useMemo(() => {
-    if (!search) return tabCompanies;
+  const filtered = useMemo(() => {
+    if (!search) return companiesWithTotals;
     const q = search.toLowerCase();
-    return tabCompanies.filter(
-      c => c.name.toLowerCase().includes(q) || c.domain.toLowerCase().includes(q)
+    return companiesWithTotals.filter(c =>
+      c.name.toLowerCase().includes(q) ||
+      (c.category ?? '').toLowerCase().includes(q)
     );
-  }, [tabCompanies, search]);
+  }, [companiesWithTotals, search]);
 
-  // Map domain → individuals for inline display in company rows
-  const individualsByDomain = useMemo(() => {
-    const map = new Map<string, Individual[]>();
-    for (const p of individuals) {
-      const d = domainFromUrl(p.website);
-      if (!d) continue;
-      if (!map.has(d)) map.set(d, []);
-      map.get(d)!.push(p);
-    }
-    return map;
-  }, [individuals]);
-
-  // Individuals — always all-time (Artisan has no monthly breakdown)
-  const tabIndividuals: Individual[] = useMemo(() => {
-    if (activeTab === 'under1b') return [];
-    return individuals.filter(p => {
-      const domain = domainFromUrl(p.website);
-      return classifyCompany(p.company, domain) === activeTab;
-    });
-  }, [individuals, activeTab]);
-
-  const filteredIndividuals: Individual[] = useMemo(() => {
-    if (!search) return tabIndividuals;
+  // Contacts view — flatten all contacts from filtered companies
+  const filteredContacts = useMemo(() => {
     const q = search.toLowerCase();
-    return tabIndividuals.filter(p =>
-      p.firstName.toLowerCase().includes(q) ||
-      p.lastName.toLowerCase().includes(q) ||
+    return sheetCompanies.flatMap(c =>
+      c.contacts.map(p => ({ ...p, company: c.name, revenue: c.revenue }))
+    ).filter(p =>
+      !search ||
+      p.name.toLowerCase().includes(q) ||
       p.company.toLowerCase().includes(q) ||
       p.title.toLowerCase().includes(q)
     );
-  }, [tabIndividuals, search]);
+  }, [sheetCompanies, search]);
 
-  const currentMonthLabel = selectedMonth === 'all'
-    ? 'All_Time'
-    : (MONTHS.find(m => m.key === selectedMonth)?.label ?? selectedMonth);
+  const tabCounts = useMemo(() => {
+    const counts = {} as Record<TabId, number>;
+    for (const tab of TABS) counts[tab.id] = (allData[tab.sheet] ?? []).length;
+    return counts;
+  }, [allData]);
 
-  const currentTabLabel = TABS.find(t => t.id === activeTab)?.label ?? activeTab;
+  const currentMonthLabel = selectedMonth === 'all' ? 'All_Time' : selectedMonth.replace(' ', '_');
+  const currentTabLabel   = TABS.find(t => t.id === activeTab)!.label;
 
   const exportTab = () => {
     if (!filtered.length) return;
     const rows = filtered.map(c => ({
-      'Company Name': c.name,
-      Domain:         c.domain,
-      Users:          c.users,
-      Sessions:       c.sessions,
-      Views:          c.views,
+      'Company Name': c.name, Revenue: c.revenue,
+      Users: (c as any).users, Sessions: (c as any).sessions, Views: (c as any).views,
     }));
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), currentTabLabel.substring(0, 31));
@@ -234,17 +115,9 @@ export default function Dashboard() {
     const wb = XLSX.utils.book_new();
     let total = 0;
     for (const tab of TABS) {
-      if (tab.id === 'under1b') continue;
-      const rows = activeCompanies
-        .filter(c => classifyCompany(c.name, c.domain) === tab.id)
-        .map(c => ({
-          'Company Name': c.name,
-          Domain:         c.domain,
-          Users:          c.users,
-          Sessions:       c.sessions,
-          Views:          c.views,
-        }));
-      if (!rows.length) continue;
+      const companies = allData[tab.sheet] ?? [];
+      if (!companies.length) continue;
+      const rows = companies.map(c => ({ 'Company Name': c.name, Revenue: c.revenue }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), tab.label.substring(0, 31));
       total += rows.length;
     }
@@ -253,148 +126,84 @@ export default function Dashboard() {
     showToast(`Exported ${total} companies across all tabs`);
   };
 
-  const isPlaceholder =
-    activeTab === 'under1b' ||
-    (activeTab === 'customers' && tabCompanies.length === 0 && tabIndividuals.length === 0);
-
   return (
     <div className="dashboard">
       {toast && <div className="toast">{toast}</div>}
 
       <header className="dashboard-header">
-        <div className="header-left">
-          <h1>Website Visitors</h1>
-        </div>
+        <div className="header-left"><h1>Website Visitors</h1></div>
         <div className="header-right">
-          <button
-            className="btn btn-secondary"
-            onClick={exportTab}
-            disabled={!filtered.length || isPlaceholder}
-          >
-            ↓ Export Tab
-          </button>
-          <button
-            className="btn btn-secondary"
-            onClick={exportAll}
-            disabled={loading}
-          >
-            ↓ Export All
-          </button>
+          <button className="btn btn-secondary" onClick={exportTab} disabled={!filtered.length}>↓ Export Tab</button>
+          <button className="btn btn-secondary" onClick={exportAll} disabled={loading}>↓ Export All</button>
         </div>
       </header>
 
       {/* Month selector */}
       <div className="month-bar">
-        <button
-          className={`month-btn${selectedMonth === 'all' ? ' month-btn-active' : ''}`}
-          onClick={() => setSelectedMonth('all')}
-        >
-          All Time
-        </button>
-        {MONTHS.map(m => (
-          <button
-            key={m.key}
-            className={`month-btn${selectedMonth === m.key ? ' month-btn-active' : ''}`}
-            onClick={() => setSelectedMonth(m.key)}
-          >
-            {m.label}
-          </button>
+        <button className={`month-btn${selectedMonth === 'all' ? ' month-btn-active' : ''}`} onClick={() => setSelectedMonth('all')}>All Time</button>
+        {MONTH_KEYS.map(m => (
+          <button key={m} className={`month-btn${selectedMonth === m ? ' month-btn-active' : ''}`} onClick={() => setSelectedMonth(m)}>{m}</button>
         ))}
       </div>
 
       {/* Industry tabs */}
       <div className="tabs">
         {TABS.map(tab => (
-          <button
-            key={tab.id}
-            className={`tab${activeTab === tab.id ? ' tab-active' : ''}`}
-            onClick={() => { setActiveTab(tab.id); setSearch(''); setViewMode('companies'); }}
-          >
+          <button key={tab.id} className={`tab${activeTab === tab.id ? ' tab-active' : ''}`}
+            onClick={() => { setActiveTab(tab.id); setSearch(''); setViewMode('companies'); }}>
             {tab.label}
-            <span className="tab-count">{tabCounts[tab.id]}</span>
+            <span className="tab-count">{tabCounts[tab.id] ?? 0}</span>
           </button>
         ))}
       </div>
 
-      {/* Companies / Individuals toggle + search */}
+      {/* Companies / Contacts toggle + search */}
       <div className="view-toggle-bar">
         <div className="view-toggle">
-          <button
-            className={`toggle-btn${viewMode === 'companies' ? ' toggle-active' : ''}`}
-            onClick={() => setViewMode('companies')}
-          >
-            Companies
-          </button>
-          <button
-            className={`toggle-btn${viewMode === 'individuals' ? ' toggle-active' : ''}`}
-            onClick={() => setViewMode('individuals')}
-          >
-            Individuals
-          </button>
+          <button className={`toggle-btn${viewMode === 'companies' ? ' toggle-active' : ''}`} onClick={() => setViewMode('companies')}>Companies</button>
+          <button className={`toggle-btn${viewMode === 'contacts'  ? ' toggle-active' : ''}`} onClick={() => setViewMode('contacts')}>Contacts</button>
         </div>
         <div className="filters-right">
-          <input
-            className="search-input"
-            placeholder={viewMode === 'individuals' ? 'Search individuals…' : 'Search companies…'}
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            disabled={isPlaceholder}
-          />
-          {!isPlaceholder && (
-            <span className="result-count">
-              {viewMode === 'individuals'
-                ? `${filteredIndividuals.length} individuals (all time)`
-                : `${filtered.length} companies`}
-            </span>
-          )}
+          <input className="search-input"
+            placeholder={viewMode === 'contacts' ? 'Search contacts…' : 'Search companies…'}
+            value={search} onChange={e => setSearch(e.target.value)} />
+          <span className="result-count">
+            {viewMode === 'contacts'
+              ? `${filteredContacts.length} contacts`
+              : `${filtered.length} companies`}
+          </span>
         </div>
       </div>
 
       {/* Content */}
       {loading ? (
         <div className="loading">Loading visitor data…</div>
-      ) : activeTab === 'under1b' ? (
-        <div className="placeholder-state">
-          <div className="placeholder-icon">📊</div>
-          <h3>Under $1B Revenue</h3>
-          <p>This tab will show companies with under $1B annual revenue once revenue data is available from Clay.</p>
-        </div>
-      ) : activeTab === 'customers' && tabCompanies.length === 0 ? (
-        <div className="placeholder-state">
-          <div className="placeholder-icon">🤝</div>
-          <h3>Customers</h3>
-          <p>Add TADA customer domains to the <code>CUSTOMER_DOMAINS</code> set in <code>classify.ts</code> to populate this tab.</p>
-        </div>
-      ) : viewMode === 'individuals' ? (
+      ) : error ? (
+        <div className="placeholder-state"><div className="placeholder-icon">⚠️</div><p>{error}</p></div>
+      ) : viewMode === 'contacts' ? (
         <div className="table-wrapper">
-          {filteredIndividuals.length === 0 ? (
-            <div className="empty-state">No individuals match your search</div>
-          ) : (() => {
-            const groups = new Map<string, Individual[]>();
-            for (const p of filteredIndividuals) {
-              const key = p.company || 'Unknown';
-              if (!groups.has(key)) groups.set(key, []);
-              groups.get(key)!.push(p);
-            }
-            return Array.from(groups.entries()).map(([company, people]) => (
-              <div key={company} className="company-group">
-                <div className="company-group-header">
-                  <span className="company-group-name">{company}</span>
-                  <span className="company-group-count">{people.length} {people.length === 1 ? 'person' : 'people'}</span>
-                </div>
-                <div className="contact-list">
-                  {people.map((p, i) => (
-                    <span key={i} className="contact-chip">
-                      {p.linkedin
-                        ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.firstName} {p.lastName}</a>
-                        : `${p.firstName} ${p.lastName}`}
-                      {p.title && <span className="contact-title">{p.title}</span>}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            ));
-          })()}
+          <table className="visitors-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Title</th><th>Company</th><th>Email</th><th>LinkedIn</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredContacts.length === 0 ? (
+                <tr><td colSpan={5} className="empty-state">No contacts found</td></tr>
+              ) : filteredContacts.map((p, i) => (
+                <tr key={i}>
+                  <td>{p.name}</td>
+                  <td className="secondary-text">{p.title}</td>
+                  <td>{p.company}</td>
+                  <td className="secondary-text">{p.email}</td>
+                  <td>
+                    {p.linkedin && <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="linkedin-link">View ↗</a>}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       ) : (
         <div className="table-wrapper">
@@ -402,7 +211,8 @@ export default function Dashboard() {
             <thead>
               <tr>
                 <th>Company</th>
-                <th>Domain</th>
+                <th>Revenue</th>
+                {activeTab === 'under1b' && <th>Category</th>}
                 <th className="num-col">Users</th>
                 <th className="num-col">Sessions</th>
                 <th className="num-col">Views</th>
@@ -410,19 +220,30 @@ export default function Dashboard() {
             </thead>
             <tbody>
               {filtered.length === 0 ? (
-                <tr><td colSpan={5} className="empty-state">No companies match your search</td></tr>
+                <tr><td colSpan={activeTab === 'under1b' ? 6 : 5} className="empty-state">No companies match your search</td></tr>
               ) : filtered.map((c, i) => (
-                  <tr key={i}>
-                    <td>{c.name}</td>
-                    <td>
-                      <a href={`https://${c.domain}`} target="_blank" rel="noopener noreferrer" className="domain-link">
-                        {c.domain}
-                      </a>
-                    </td>
-                    <td className="num-col">{c.users}</td>
-                    <td className="num-col">{c.sessions}</td>
-                    <td className="num-col">{c.views}</td>
-                  </tr>
+                <tr key={i}>
+                  <td>
+                    <div>{c.name}</div>
+                    {c.contacts.length > 0 && (
+                      <div className="contact-list">
+                        {c.contacts.map((p, j) => (
+                          <span key={j} className="contact-chip">
+                            {p.linkedin
+                              ? <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="contact-link">{p.name}</a>
+                              : p.name}
+                            {p.title && <span className="contact-title">{p.title}</span>}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
+                  <td className="secondary-text">{c.revenue}</td>
+                  {activeTab === 'under1b' && <td className="secondary-text">{c.category}</td>}
+                  <td className="num-col">{(c as any).users || 0}</td>
+                  <td className="num-col">{(c as any).sessions || 0}</td>
+                  <td className="num-col">{(c as any).views || 0}</td>
+                </tr>
               ))}
             </tbody>
           </table>
