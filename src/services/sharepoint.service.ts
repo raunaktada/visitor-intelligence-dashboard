@@ -142,6 +142,23 @@ function parseNewSheet(rows: unknown[][], hasCategory: boolean): Company[] {
   return Array.from(companyMap.values());
 }
 
+// Correct known typos in the old SharePoint file's company names
+const OLD_FILE_TYPOS: Record<string, string> = {
+  'goodyear tire & ruer':       'Goodyear Tire & Rubber',
+  'stanley lack & decker':      'Stanley Black & Decker',
+  'watec corporation':          'Wabtec Corporation',
+  'acuity rands, inc':          'Acuity Brands, Inc',
+  'emraco':                     'Embraco',
+  'hillenrand, inc':            'Hillenbrand, Inc',
+  'p p.l.c.':                   'BP p.l.c.',
+  'target rands, inc':          'Target Brands, Inc',
+  'procter & gamle':            'Procter & Gamble',
+  'h-e-':                       'H-E-B',
+  'ulta eauty':                 'Ulta Beauty',
+  'en e. keith foods':          'Ben E. Keith Foods',
+  'the lurizol corporation':    'The Lubrizol Corporation',
+};
+
 // Returns contacts grouped by normalized company name from old file
 function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; contacts: Contact[] }> {
   const result = new Map<string, { displayName: string; contacts: Contact[] }>();
@@ -158,7 +175,8 @@ function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; co
 
   for (const rawRow of rows.slice(1)) {
     const row = rawRow as (string | number)[];
-    const displayName = String(row[nameIdx] ?? '').trim();
+    const raw = String(row[nameIdx] ?? '').trim();
+    const displayName = OLD_FILE_TYPOS[raw.toLowerCase()] ?? raw;
     const company = displayName.toLowerCase();
     const contactName = String(row[contactIdx] ?? '').trim();
     if (!company || !contactName) continue;
@@ -197,9 +215,9 @@ function mergeContacts(companies: Company[], oldContacts: Map<string, { displayN
   });
 }
 
-// Add companies from old file that are missing in new file
-function addMissingCompanies(companies: Company[], oldContacts: Map<string, { displayName: string; contacts: Contact[] }>, existingNames: Set<string>): Company[] {
-  const existingNorm = new Set([...existingNames].map(normalizeName));
+// Add companies from old file that are missing across ALL new file sheets
+function addMissingCompanies(companies: Company[], oldContacts: Map<string, { displayName: string; contacts: Contact[] }>, allNewFileNorm: Set<string>): Company[] {
+  const existingNorm = allNewFileNorm;
   const extras: Company[] = [];
   for (const [nameLower, { displayName, contacts }] of oldContacts) {
     if (!existingNorm.has(normalizeName(nameLower))) {
@@ -237,20 +255,26 @@ export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
   ]);
 
   // Index old contacts by new sheet name
-  const oldBySheet = new Map<string, Map<string, Contact[]>>();
+  const oldBySheet = new Map<string, Map<string, { displayName: string; contacts: Contact[] }>>();
   for (const { newSheet, contacts } of oldResults) {
     oldBySheet.set(newSheet, contacts);
+  }
+
+  // Build a set of ALL company names across ALL new file sheets (cross-sheet dedup)
+  // so old file companies that exist anywhere in the new file are never re-added
+  const allNewFileNorm = new Set<string>();
+  for (const { companies } of newResults) {
+    for (const c of companies) allNewFileNorm.add(normalizeName(c.name));
   }
 
   // Merge
   const result = {} as Record<string, Company[]>;
   for (const { sheet, companies } of newResults) {
     const oldContacts = oldBySheet.get(sheet) ?? new Map();
-    const existingNames = new Set(companies.map(c => c.name.toLowerCase()));
     let merged = mergeContacts(companies, oldContacts);
-    // For non-under1b sheets, add companies only in old file
+    // Add companies only in old file AND not present in ANY new file sheet
     if (sheet !== 'Under $1B (250M-1B)') {
-      merged = addMissingCompanies(merged, oldContacts, existingNames);
+      merged = addMissingCompanies(merged, oldContacts, allNewFileNorm);
     }
     result[sheet] = merged.map(c => {
       const override = REVENUE_OVERRIDES[c.name.toLowerCase()];

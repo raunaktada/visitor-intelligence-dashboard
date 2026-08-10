@@ -118,8 +118,33 @@ export default function Dashboard() {
     }).catch(() => { setError('Failed to load data.'); setLoading(false); });
   }, []);
 
+  // Deduplicate companies across sheets: if a company appears in multiple sheets,
+  // keep it only in the highest-priority tab (CPG/Healthcare/Defense over Manufacturing)
+  const SHEET_PRIORITY = [
+    'Customers & Partners',
+    'Defense Manufacturers - 1B+',
+    'Data Center Mfg - 1B+',
+    'Healthcare_MedTech - 1B+',
+    'CPG - 1B+',
+    'Manufacturing - 1B+',
+    'Under $1B (250M-1B)',
+  ];
+  const dedupedData = useMemo(() => {
+    const claimed = new Set<string>();
+    const result: Record<string, Company[]> = {};
+    for (const sheet of SHEET_PRIORITY) {
+      result[sheet] = (allData[sheet] ?? []).filter(c => {
+        const key = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        if (claimed.has(key)) return false;
+        claimed.add(key);
+        return true;
+      });
+    }
+    return result;
+  }, [allData]);
+
   const activeSheet = TABS.find(t => t.id === activeTab)!.sheet;
-  const sheetCompanies: Company[] = useMemo(() => allData[activeSheet] ?? [], [allData, activeSheet]);
+  const sheetCompanies: Company[] = useMemo(() => dedupedData[activeSheet] ?? [], [dedupedData, activeSheet]);
 
   // Company view: Sales Intel data only, sorted by sessions desc
   const addTotals = useCallback((c: Company) => {
@@ -138,11 +163,11 @@ export default function Dashboard() {
     let base: Company[];
     if (activeTab === 'under1b') {
       // Include the under1b sheet + overflow from other sheets where revenue < $1B
-      const under1bNames = new Set((allData['Under $1B (250M-1B)'] ?? []).map(c => c.name.toLowerCase()));
+      const under1bNames = new Set((dedupedData['Under $1B (250M-1B)'] ?? []).map(c => c.name.toLowerCase()));
       const overflow: Company[] = [];
       for (const tab of TABS) {
-        if (tab.id === 'under1b') continue;
-        for (const c of (allData[tab.sheet] ?? [])) {
+        if (tab.id === 'under1b' || tab.id === 'customers') continue;
+        for (const c of (dedupedData[tab.sheet] ?? [])) {
           const rev = revenueInBillions(cleanRevenue(c.revenue));
           if (rev < 1 && !under1bNames.has(c.name.toLowerCase())) overflow.push(c);
         }
@@ -212,9 +237,9 @@ export default function Dashboard() {
 
   const tabCounts = useMemo(() => {
     const counts = {} as Record<TabId, number>;
-    for (const tab of TABS) counts[tab.id] = (allData[tab.sheet] ?? []).length;
+    for (const tab of TABS) counts[tab.id] = (dedupedData[tab.sheet] ?? []).length;
     return counts;
-  }, [allData]);
+  }, [dedupedData]);
 
   const currentMonthLabel = selectedMonth === 'all' ? 'All_Time' : selectedMonth.replace(' ', '_');
   const currentTabLabel   = TABS.find(t => t.id === activeTab)!.label;
