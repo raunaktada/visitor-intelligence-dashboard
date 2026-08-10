@@ -143,11 +143,23 @@ function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; co
   return result;
 }
 
+// Strip legal suffixes and filler words so "Caterpillar Inc." == "Caterpillar"
+function normalizeName(n: string): string {
+  return n.toLowerCase()
+    .replace(/[,.]|(\b(inc|llc|corp|ltd|co|system|systems|group|holdings|international|global)\b)/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
 // Merge old file contacts into new file companies (dedup by name)
 function mergeContacts(companies: Company[], oldContacts: Map<string, { displayName: string; contacts: Contact[] }>): Company[] {
+  const byNorm = new Map<string, Contact[]>();
+  for (const [nameLower, { contacts }] of oldContacts) {
+    byNorm.set(normalizeName(nameLower), contacts);
+  }
+
   return companies.map(c => {
     const existing = new Set(c.contacts.map(p => p.name.toLowerCase()));
-    const fromOld  = oldContacts.get(c.name.toLowerCase())?.contacts ?? [];
+    const fromOld  = byNorm.get(normalizeName(c.name)) ?? [];
     const newOnes  = fromOld.filter(p => !existing.has(p.name.toLowerCase()));
     return { ...c, contacts: [...c.contacts, ...newOnes] };
   });
@@ -155,9 +167,10 @@ function mergeContacts(companies: Company[], oldContacts: Map<string, { displayN
 
 // Add companies from old file that are missing in new file
 function addMissingCompanies(companies: Company[], oldContacts: Map<string, { displayName: string; contacts: Contact[] }>, existingNames: Set<string>): Company[] {
+  const existingNorm = new Set([...existingNames].map(normalizeName));
   const extras: Company[] = [];
   for (const [nameLower, { displayName, contacts }] of oldContacts) {
-    if (!existingNames.has(nameLower)) {
+    if (!existingNorm.has(normalizeName(nameLower))) {
       extras.push({ name: displayName, revenue: '', months: {}, contacts });
     }
   }
