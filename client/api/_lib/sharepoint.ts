@@ -51,6 +51,12 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'peloton interactive': '$0.7B',
   'lozier corporation':  '$0.5B',
   'oshkosh defense':     '$10.1B',
+  'bd':                  '$20.2B',
+  'becton dickinson':    '$20.2B',
+  'bd (becton dickinson)': '$20.2B',
+  'examworks':           '$1.2B',
+  'sciex':               '$1.0B',
+  'parker lord':         '$1.1B',
 };
 
 export const SHEET_NAMES = [
@@ -164,7 +170,7 @@ function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; co
 // Strip legal suffixes and filler words so "Caterpillar Inc." == "Caterpillar"
 function normalizeName(n: string): string {
   return n.toLowerCase()
-    .replace(/[,.]|(\b(inc|llc|corp|ltd|co|system|systems|group|holdings|international|global)\b)/g, '')
+    .replace(/[,.]|(\b(inc|llc|corp|corporation|ltd|plc|co|company|system|systems|group|holdings|international|global|enterprises|industries|benckiser)\b)/g, '')
     .replace(/\s+/g, ' ').trim();
 }
 

@@ -156,12 +156,9 @@ export default function Dashboard() {
     return base.map(addTotals)
       .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
       .sort((a, b) => {
-        if (activeTab === 'under1b') {
-          const ra = parseFloat((a.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
-          const rb = parseFloat((b.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
-          return rb - ra;
-        }
-        return (b as any).sessions - (a as any).sessions;
+        const ra = parseFloat((a.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
+        const rb = parseFloat((b.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
+        return rb - ra;
       });
   }, [sheetCompanies, allData, selectedMonth, activeTab, addTotals]);
 
