@@ -35,6 +35,24 @@ const OLD_TO_NEW: Record<string, string> = {
   'CPG':                  'CPG - 1B+',
 };
 
+const REVENUE_OVERRIDES: Record<string, string> = {
+  'lockheed martin':     '$71.0B',
+  'kbr inc.':            '$7.4B',
+  'kbr inc':             '$7.4B',
+  '3m':                  '$24.6B',
+  'parker hannifin':     '$19.9B',
+  'grainger':            '$16.5B',
+  'domtar':              '$5.4B',
+  'adentra group':       '$2.3B',
+  'siemens':             '$90.4B',
+  'mccormick fona':      '$6.7B',
+  'adventhealth':        '$9.0B',
+  'trimedx':             '$0.3B',
+  'peloton interactive': '$0.7B',
+  'lozier corporation':  '$0.5B',
+  'oshkosh defense':     '$10.1B',
+};
+
 export const SHEET_NAMES = [
   'Customers & Partners',
   'Defense Manufacturers - 1B+',
@@ -220,7 +238,9 @@ export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
     if (sheet !== 'Under $1B (250M-1B)') {
       merged = addMissingCompanies(merged, oldContacts, existingNames);
     }
-    result[sheet] = merged;
+    result[sheet] = merged.map(c =>
+      c.revenue ? c : { ...c, revenue: REVENUE_OVERRIDES[c.name.toLowerCase()] ?? '' }
+    );
   }
   return result;
 }
