@@ -111,8 +111,8 @@ function parseNewSheet(rows: unknown[][], hasCategory: boolean): Company[] {
 }
 
 // Returns contacts grouped by normalized company name from old file
-function parseOldSheet(rows: unknown[][]): Map<string, Contact[]> {
-  const result = new Map<string, Contact[]>();
+function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; contacts: Contact[] }> {
+  const result = new Map<string, { displayName: string; contacts: Contact[] }>();
   if (rows.length < 2) return result;
   const headers = (rows[0] as string[]).map(h => String(h ?? '').trim());
   const idx = (name: string) => headers.findIndex(h => h.toLowerCase() === name.toLowerCase());
@@ -126,12 +126,13 @@ function parseOldSheet(rows: unknown[][]): Map<string, Contact[]> {
 
   for (const rawRow of rows.slice(1)) {
     const row = rawRow as (string | number)[];
-    const company = String(row[nameIdx] ?? '').trim().toLowerCase();
+    const displayName = String(row[nameIdx] ?? '').trim();
+    const company = displayName.toLowerCase();
     const contactName = String(row[contactIdx] ?? '').trim();
     if (!company || !contactName) continue;
 
-    if (!result.has(company)) result.set(company, []);
-    result.get(company)!.push({
+    if (!result.has(company)) result.set(company, { displayName, contacts: [] });
+    result.get(company)!.contacts.push({
       name:       contactName,
       title:      String(row[titleIdx]   ?? '').trim(),
       email:      String(row[emailIdx]   ?? '').trim(),
@@ -143,22 +144,21 @@ function parseOldSheet(rows: unknown[][]): Map<string, Contact[]> {
 }
 
 // Merge old file contacts into new file companies (dedup by name)
-function mergeContacts(companies: Company[], oldContacts: Map<string, Contact[]>): Company[] {
+function mergeContacts(companies: Company[], oldContacts: Map<string, { displayName: string; contacts: Contact[] }>): Company[] {
   return companies.map(c => {
     const existing = new Set(c.contacts.map(p => p.name.toLowerCase()));
-    const fromOld  = oldContacts.get(c.name.toLowerCase()) ?? [];
+    const fromOld  = oldContacts.get(c.name.toLowerCase())?.contacts ?? [];
     const newOnes  = fromOld.filter(p => !existing.has(p.name.toLowerCase()));
     return { ...c, contacts: [...c.contacts, ...newOnes] };
   });
 }
 
 // Add companies from old file that are missing in new file
-function addMissingCompanies(companies: Company[], oldContacts: Map<string, Contact[]>, existingNames: Set<string>): Company[] {
+function addMissingCompanies(companies: Company[], oldContacts: Map<string, { displayName: string; contacts: Contact[] }>, existingNames: Set<string>): Company[] {
   const extras: Company[] = [];
-  for (const [nameLower, contacts] of oldContacts) {
+  for (const [nameLower, { displayName, contacts }] of oldContacts) {
     if (!existingNames.has(nameLower)) {
-      // Find display name from first contact's row (we only have lowercase key)
-      extras.push({ name: contacts[0]?.name ?? nameLower, revenue: '', months: {}, contacts });
+      extras.push({ name: displayName, revenue: '', months: {}, contacts });
     }
   }
   return [...companies, ...extras];
