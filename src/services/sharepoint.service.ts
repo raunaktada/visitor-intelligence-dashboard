@@ -250,9 +250,10 @@ export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
     if (sheet !== 'Under $1B (250M-1B)') {
       merged = addMissingCompanies(merged, oldContacts, existingNames);
     }
-    result[sheet] = merged.map(c =>
-      c.revenue ? c : { ...c, revenue: REVENUE_OVERRIDES[c.name.toLowerCase()] ?? '' }
-    );
+    result[sheet] = merged.map(c => {
+      const override = REVENUE_OVERRIDES[c.name.toLowerCase()];
+      return override ? { ...c, revenue: override } : c;
+    });
   }
   return result;
 }
