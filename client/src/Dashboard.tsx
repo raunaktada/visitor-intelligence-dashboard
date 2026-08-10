@@ -7,7 +7,7 @@ const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 
 type TabId = 'customers' | 'defense' | 'datacenter' | 'manufacturing' | 'healthcare' | 'cpg' | 'under1b';
 
 interface MonthData { users: number; sessions: number; views: number; }
-interface Contact { name: string; title: string; email: string; linkedin: string; pageViewed: number; }
+interface Contact { name: string; title: string; email: string; linkedin: string; pageViewed: string; }
 interface Company {
   name: string;
   revenue: string;
@@ -150,12 +150,12 @@ export default function Dashboard() {
 
   // Contacts view: SharePoint contacts + Artisan individuals, classified to active tab
   const tabContacts = useMemo(() => {
-    const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: number; source: string }[] = [];
+    const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string }[] = [];
 
     // SharePoint contacts from current tab
     for (const c of sheetCompanies) {
       for (const p of c.contacts) {
-        contacts.push({ ...p, company: c.name, source: 'sharepoint' });
+        contacts.push({ ...p, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint' });
       }
     }
 
@@ -171,7 +171,7 @@ export default function Dashboard() {
       contacts.push({
         name: `${p.firstName} ${p.lastName}`.trim(),
         title: p.title, company: p.company, email: p.email,
-        linkedin: p.linkedin, pageViewed: p.pageViews, source: 'artisan',
+        linkedin: p.linkedin, pageViewed: String(p.pageViews || ''), source: 'artisan',
       });
     }
 
@@ -291,7 +291,11 @@ export default function Dashboard() {
                   <td className="secondary-text">{p.title}</td>
                   <td>{p.company}</td>
                   <td className="secondary-text">{p.email}</td>
-                  <td className="num-col">{p.pageViewed || ''}</td>
+                  <td className="num-col">
+                    {p.pageViewed?.startsWith('http')
+                      ? <a href={p.pageViewed} target="_blank" rel="noopener noreferrer" className="linkedin-link">View ↗</a>
+                      : (p.pageViewed || '')}
+                  </td>
                   <td>{p.linkedin && <a href={p.linkedin} target="_blank" rel="noopener noreferrer" className="linkedin-link">View ↗</a>}</td>
                 </tr>
               ))}
