@@ -174,8 +174,10 @@ export default function Dashboard() {
       }
       base = [...sheetCompanies, ...overflow];
     } else {
-      // Exclude companies with known revenue < $1B
-      base = sheetCompanies.filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 1);
+      // Exclude companies with known revenue < $1B (but never filter Customers & Partners)
+      base = activeTab === 'customers'
+        ? sheetCompanies
+        : sheetCompanies.filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 1);
     }
 
     return base.map(addTotals)
