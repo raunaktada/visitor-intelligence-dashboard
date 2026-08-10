@@ -1,22 +1,11 @@
 import { Client } from '@microsoft/microsoft-graph-client';
 import { ClientSecretCredential } from '@azure/identity';
 
-function getConfig() {
-  return {
-    tenantId:     process.env.AZURE_TENANT_ID!,
-    clientId:     process.env.AZURE_CLIENT_ID!,
-    clientSecret: process.env.AZURE_CLIENT_SECRET!,
-    driveId:      process.env.SHAREPOINT_DRIVE_ID!,
-    fileId:       process.env.SHAREPOINT_FILE_ID!,
-  };
-}
-
 function buildClient(): Client {
-  const config = getConfig();
   const credential = new ClientSecretCredential(
-    config.tenantId,
-    config.clientId,
-    config.clientSecret,
+    process.env.AZURE_TENANT_ID!,
+    process.env.AZURE_CLIENT_ID!,
+    process.env.AZURE_CLIENT_SECRET!,
   );
   return Client.initWithMiddleware({
     authProvider: {
@@ -28,73 +17,90 @@ function buildClient(): Client {
   });
 }
 
-export async function findSiteAndFileIds(siteName: string, fileName: string): Promise<void> {
-  const client = buildClient();
-  const sites = await client.api(`/sites?search=${encodeURIComponent(siteName)}`).get();
-  const site = sites.value[0];
-  if (!site) { console.error('No site found for:', siteName); return; }
-  console.log('SHAREPOINT_SITE_ID=' + site.id);
+export const SHEET_NAMES = [
+  'Customers & Partners',
+  'Defense Manufacturers - 1B+',
+  'Data Center Mfg - 1B+',
+  'Manufacturing - 1B+',
+  'Healthcare_MedTech - 1B+',
+  'CPG - 1B+',
+  'Under $1B (250M-1B)',
+] as const;
 
-  const drive = await client.api(`/sites/${site.id}/drive`).get();
-  console.log('SHAREPOINT_DRIVE_ID=' + drive.id);
-
-  const files = await client.api(`/sites/${site.id}/drive/items/root/children`).get();
-  const file = files.value.find((f: { name: string }) => f.name === fileName);
-  if (!file) { console.error('No file found for:', fileName); return; }
-  console.log('SHAREPOINT_FILE_ID=' + file.id);
+export interface MonthData { users: number; sessions: number; views: number; }
+export interface Contact { name: string; title: string; email: string; linkedin: string; pageViewed: number; }
+export interface Company {
+  name: string;
+  revenue: string;
+  category?: string;
+  months: Record<string, MonthData>;
+  contacts: Contact[];
 }
 
-export const SHEETS = [
-  'Summary',
-  'Customers & Partners',
-  'Data Centers',
-  'Defense',
-  'Manufacturing',
-  'Healthcare & MedTech',
-  'CPG',
-];
+const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'];
 
-async function getUsedRange(sheetName: string): Promise<unknown[][]> {
+async function getRawRows(sheetName: string): Promise<unknown[][]> {
   const client = buildClient();
-  const { driveId, fileId } = getConfig();
-
+  const driveId = process.env.SHAREPOINT_DRIVE_ID!;
+  const fileId  = process.env.SHAREPOINT_FILE_ID!;
   const response = await client
     .api(`/drives/${driveId}/items/${fileId}/workbook/worksheets('${encodeURIComponent(sheetName)}')/usedRange`)
     .get();
-
   return (response.values as unknown[][]) || [];
 }
 
-export async function getSheetData(sheetName: string): Promise<Record<string, unknown>[]> {
-  const rows = await getUsedRange(sheetName);
+function parseSheet(rows: unknown[][], hasCategory: boolean): Company[] {
   if (rows.length < 2) return [];
+  const headers = (rows[0] as string[]).map(h => String(h ?? '').trim());
+  const idx = (name: string) => headers.indexOf(name);
 
-  const headers = (rows[0] as string[]).map(h => String(h).trim()).filter(Boolean);
+  const companyMap = new Map<string, Company>();
+  for (const rawRow of rows.slice(1)) {
+    const row = rawRow as (string | number)[];
+    const name = String(row[idx('Company Name')] ?? '').trim();
+    if (!name) continue;
 
-  return rows.slice(1)
-    .filter(row => row.some(cell => cell !== '' && cell !== null))
-    .map(row => {
-      const obj: Record<string, unknown> = {};
-      headers.forEach((h, i) => { if (h) obj[h] = row[i] ?? ''; });
-      return obj;
-    });
+    if (!companyMap.has(name)) {
+      const revenue = String(
+        row[idx('Company Revenue (in Billions)')] ||
+        row[idx('Annual Revenue (in Billions USD)')] || ''
+      ).trim();
+      const months: Record<string, MonthData> = {};
+      for (const m of MONTH_KEYS) {
+        const u = Number(row[idx(`${m} Users`)])    || 0;
+        const s = Number(row[idx(`${m} Sessions`)]) || 0;
+        const v = Number(row[idx(`${m} Views`)])    || 0;
+        if (u || s || v) months[m] = { users: u, sessions: s, views: v };
+      }
+      const company: Company = { name, revenue, months, contacts: [] };
+      if (hasCategory) company.category = String(row[idx('Category')] ?? '').trim();
+      companyMap.set(name, company);
+    }
+
+    const contactName = String(row[idx('Contact Name')] ?? '').trim();
+    if (contactName) {
+      companyMap.get(name)!.contacts.push({
+        name:       contactName,
+        title:      String(row[idx('Job Title')]   ?? '').trim(),
+        email:      String(row[idx('Email')]       ?? '').trim(),
+        linkedin:   String(row[idx('LinkedIn')]    ?? '').trim(),
+        pageViewed: Number(row[idx('Page Viewed')] ?? 0),
+      });
+    }
+  }
+  return Array.from(companyMap.values());
 }
 
-// Summary sheet is a free-form layout (title + info line + tab list), not a table.
-// Return it as-is so the frontend can render it exactly like the Excel sheet.
-export async function getSummaryRaw(): Promise<unknown[][]> {
-  return getUsedRange('Summary');
-}
-
-export async function getAllSheetsData(): Promise<Record<string, unknown>> {
-  const result: Record<string, unknown> = {};
+export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
+  const result = {} as Record<string, Company[]>;
   await Promise.all(
-    SHEETS.map(async sheet => {
+    SHEET_NAMES.map(async sheet => {
       try {
-        result[sheet] = sheet === 'Summary' ? await getSummaryRaw() : await getSheetData(sheet);
+        const rows = await getRawRows(sheet);
+        result[sheet] = parseSheet(rows, sheet === 'Under $1B (250M-1B)');
       } catch (err) {
         console.error(`Failed to fetch sheet "${sheet}":`, err);
-        result[sheet] = sheet === 'Summary' ? [] : [];
+        result[sheet] = [];
       }
     })
   );

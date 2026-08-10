@@ -26,7 +26,7 @@ const TABS: { id: TabId; label: string; sheet: string }[] = [
   { id: 'under1b',       label: 'Under $1B',                  sheet: 'Under $1B (250M-1B)' },
 ];
 
-const API_URL = (import.meta.env.VITE_API_URL as string) || 'http://localhost:5001';
+const API_URL = import.meta.env.PROD ? '' : ((import.meta.env.VITE_API_URL as string) || 'http://localhost:5001');
 
 export default function Dashboard() {
   const [allData,        setAllData]        = useState<Record<string, Company[]>>({});
