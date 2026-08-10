@@ -63,6 +63,7 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'solar turines':       '$3.1B', // typo in source data
   'crate and barrel':    '$2.5B',
   'crate & barrel':      '$2.5B',
+  'crate and arrel':     '$2.5B', // typo in source data
   'milton cat':          '$0.72B',
 };
 
