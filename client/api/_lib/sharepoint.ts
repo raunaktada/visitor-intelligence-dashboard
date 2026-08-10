@@ -60,6 +60,7 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'ab inbev':            '$57.7B',
   'a inev':              '$57.7B', // corrupted "AB InBev" in source data
   'solar turbines':      '$3.1B',
+  'solar turines':       '$3.1B', // typo in source data
   'crate and barrel':    '$2.5B',
   'crate & barrel':      '$2.5B',
   'milton cat':          '$0.72B',
