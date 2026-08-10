@@ -32,6 +32,12 @@ const TABS: { id: TabId; label: string; sheet: string }[] = [
 
 const API_URL = import.meta.env.PROD ? '' : ((import.meta.env.VITE_API_URL as string) || 'http://localhost:5001');
 
+function revenueInBillions(cleaned: string): number {
+  if (!cleaned) return Infinity; // unknown — don't filter out
+  const n = parseFloat(cleaned.replace(/[^0-9.]/g, ''));
+  return isNaN(n) ? Infinity : n;
+}
+
 // Clean revenue: strip ranges, ensure $X.XB format
 function cleanRevenue(raw: string): string {
   if (!raw) return '';
@@ -116,29 +122,48 @@ export default function Dashboard() {
   const sheetCompanies: Company[] = useMemo(() => allData[activeSheet] ?? [], [allData, activeSheet]);
 
   // Company view: Sales Intel data only, sorted by sessions desc
+  const addTotals = useCallback((c: Company) => {
+    if (selectedMonth === 'all') {
+      const t = Object.values(c.months).reduce(
+        (a, m) => ({ users: a.users + m.users, sessions: a.sessions + m.sessions, views: a.views + m.views }),
+        { users: 0, sessions: 0, views: 0 }
+      );
+      return { ...c, revenue: cleanRevenue(c.revenue), ...t };
+    }
+    const m = c.months[selectedMonth] ?? { users: 0, sessions: 0, views: 0 };
+    return { ...c, revenue: cleanRevenue(c.revenue), ...m };
+  }, [selectedMonth]);
+
   const companiesWithTotals = useMemo(() => {
-    return sheetCompanies.map(c => {
-      if (selectedMonth === 'all') {
-        const t = Object.values(c.months).reduce(
-          (a, m) => ({ users: a.users + m.users, sessions: a.sessions + m.sessions, views: a.views + m.views }),
-          { users: 0, sessions: 0, views: 0 }
-        );
-        return { ...c, revenue: cleanRevenue(c.revenue), ...t };
+    let base: Company[];
+    if (activeTab === 'under1b') {
+      // Include the under1b sheet + overflow from other sheets where revenue < $1B
+      const under1bNames = new Set((allData['Under $1B (250M-1B)'] ?? []).map(c => c.name.toLowerCase()));
+      const overflow: Company[] = [];
+      for (const tab of TABS) {
+        if (tab.id === 'under1b') continue;
+        for (const c of (allData[tab.sheet] ?? [])) {
+          const rev = revenueInBillions(cleanRevenue(c.revenue));
+          if (rev < 1 && !under1bNames.has(c.name.toLowerCase())) overflow.push(c);
+        }
       }
-      const m = c.months[selectedMonth] ?? { users: 0, sessions: 0, views: 0 };
-      return { ...c, revenue: cleanRevenue(c.revenue), ...m };
-    })
-    .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
-    .sort((a, b) => {
-      // Under $1B: sort by revenue; others: by sessions
-      if (activeTab === 'under1b') {
-        const ra = parseFloat((a.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
-        const rb = parseFloat((b.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
-        return rb - ra;
-      }
-      return (b as any).sessions - (a as any).sessions;
-    });
-  }, [sheetCompanies, selectedMonth, activeTab]);
+      base = [...sheetCompanies, ...overflow];
+    } else {
+      // Exclude companies with known revenue < $1B
+      base = sheetCompanies.filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 1);
+    }
+
+    return base.map(addTotals)
+      .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
+      .sort((a, b) => {
+        if (activeTab === 'under1b') {
+          const ra = parseFloat((a.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
+          const rb = parseFloat((b.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
+          return rb - ra;
+        }
+        return (b as any).sessions - (a as any).sessions;
+      });
+  }, [sheetCompanies, allData, selectedMonth, activeTab, addTotals]);
 
   const filtered = useMemo(() => {
     if (!search) return companiesWithTotals;
