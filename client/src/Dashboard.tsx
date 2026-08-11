@@ -397,11 +397,7 @@ export default function Dashboard() {
 
       <header className="dashboard-header">
         <div className="header-left">
-          <svg className="tada-logo" width="130" height="36" viewBox="0 0 130 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <polyline points="22,4 6,18 22,32" stroke="#FF6B5B" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
-            <polyline points="14,4 4,18 14,32" stroke="#FF6B5B" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.55"/>
-            <text x="30" y="26" fontFamily="Space Grotesk, Inter, system-ui, sans-serif" fontSize="22" fontWeight="700" fill="#1defff" letterSpacing="1">TADA</text>
-          </svg>
+          <img src="/tada-logo.png" alt="TADA" className="tada-logo" />
           <h1>Website Visitors</h1>
         </div>
         <div className="header-right">

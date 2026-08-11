@@ -50,7 +50,7 @@ body {
   gap: 12px;
 }
 
-.tada-logo { display: block; }
+.tada-logo { height: 32px; width: auto; display: block; }
 
 .dashboard-header h1 {
   font-size: 16px;
