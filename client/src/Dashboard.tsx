@@ -571,8 +571,9 @@ export default function Dashboard() {
     const counts = {} as Record<TabId, number>;
     for (const tab of TABS) {
       if (tab.id === 'all') continue;
+      const minRev = tab.id === 'customers' ? 0 : tab.id === 'under1b' ? 0.25 : 1;
       const companies = (dedupedData[tab.sheet] ?? []).filter(
-        c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25
+        c => revenueInBillions(cleanRevenue(c.revenue)) >= minRev
       );
       counts[tab.id] = selectedMonth === 'all'
         ? companies.length
