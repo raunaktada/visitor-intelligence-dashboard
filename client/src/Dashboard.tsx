@@ -601,9 +601,18 @@ export default function Dashboard() {
     const wb = XLSX.utils.book_new();
     let total = 0;
     for (const tab of TABS) {
-      const companies = allData[tab.sheet] ?? [];
+      if (tab.id === 'all') continue;
+      const companies = (dedupedData[tab.sheet] ?? [])
+        .filter(c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
+        .map(addTotals);
       if (!companies.length) continue;
-      const rows = companies.map(c => ({ 'Company Name': c.name, 'Revenue (Billions)': cleanRevenue(c.revenue) }));
+      const rows = companies.map(c => ({
+        'Company Name': c.name,
+        'Revenue (Billions)': c.revenue,
+        Users: (c as any).users,
+        Sessions: (c as any).sessions,
+        Views: (c as any).views,
+      }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), tab.label.substring(0, 31));
       total += rows.length;
     }

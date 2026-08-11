@@ -106,6 +106,23 @@ const EXCLUDED_COMPANIES = new Set([
   // Healthcare IT & Services
   'change healthcare',
   'evolent health',
+  // Defense
+  'nasa',
+  // CPG non-fit
+  'crate and barrel',
+  'crate & barrel',
+  'chico\'s fas, inc',
+  'mr price group',
+  'directv',
+  'instacart',
+  'etsy',
+  'football fanatics',
+  'kwik trip, inc.',
+  'stein mart, inc',
+  'the exchange',
+  // Under $1B non-fit
+  'peloton interactive',
+  'papa murphy\'s international',
 ]);
 
 export const SHEET_NAMES = [
