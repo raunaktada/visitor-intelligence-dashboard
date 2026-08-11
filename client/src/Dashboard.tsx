@@ -432,6 +432,8 @@ export default function Dashboard() {
     'piedmont':                     'Healthcare_MedTech - 1B+',
     'ab inbev':                     'CPG - 1B+',
     'mccormick fona':               'CPG - 1B+',
+    'lozier corporation':           'Under $1B (250M-1B)',
+    'trimedx':                      'Under $1B (250M-1B)',
   };
 
   const dedupedData = useMemo(() => {
@@ -569,10 +571,23 @@ export default function Dashboard() {
 
   const tabCounts = useMemo(() => {
     const counts = {} as Record<TabId, number>;
+    // Pre-compute under1b overflow (companies in industry tabs with rev < $1B)
+    const under1bNames = new Set((dedupedData['Under $1B (250M-1B)'] ?? []).map(c => c.name.toLowerCase()));
+    const under1bOverflow: Company[] = [];
+    for (const tab of TABS) {
+      if (tab.id === 'under1b' || tab.id === 'customers' || tab.id === 'all') continue;
+      for (const c of (dedupedData[tab.sheet] ?? [])) {
+        const rev = revenueInBillions(cleanRevenue(c.revenue));
+        if (rev < 1 && !under1bNames.has(c.name.toLowerCase())) under1bOverflow.push(c);
+      }
+    }
     for (const tab of TABS) {
       if (tab.id === 'all') continue;
       const minRev = tab.id === 'customers' ? 0 : tab.id === 'under1b' ? 0.25 : 1;
-      const companies = (dedupedData[tab.sheet] ?? []).filter(
+      const base = tab.id === 'under1b'
+        ? [...(dedupedData[tab.sheet] ?? []), ...under1bOverflow]
+        : (dedupedData[tab.sheet] ?? []);
+      const companies = base.filter(
         c => revenueInBillions(cleanRevenue(c.revenue)) >= minRev
       );
       counts[tab.id] = selectedMonth === 'all'

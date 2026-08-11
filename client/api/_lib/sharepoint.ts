@@ -222,6 +222,7 @@ const OLD_FILE_TYPOS: Record<string, string> = {
   'a inev':                     'AB InBev',
   'crate and arrel':            'Crate and Barrel',
   'siemens':                    'Siemens Healthineers',
+  'solar turines':              'Solar Turbines',
 };
 
 // Returns contacts grouped by normalized company name from old file

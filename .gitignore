@@ -8,3 +8,4 @@ dist/
 credentials.json
 client/node_modules/
 client/dist/
+.vercel
