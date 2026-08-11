@@ -506,7 +506,7 @@ export default function Dashboard() {
     }
 
     return base
-      .filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
+      .filter(c => activeTab === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
       .map(addTotals)
       .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
       .sort((a, b) => {
@@ -569,7 +569,7 @@ export default function Dashboard() {
     for (const tab of TABS) {
       if (tab.id === 'all') continue;
       const companies = (dedupedData[tab.sheet] ?? []).filter(
-        c => revenueInBillions(cleanRevenue(c.revenue)) >= 0.25
+        c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25
       );
       counts[tab.id] = selectedMonth === 'all'
         ? companies.length
