@@ -75,6 +75,12 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'alphakor group':      '$0.05',
 };
 
+// Companies to exclude entirely from the dashboard (bad data in SharePoint)
+const EXCLUDED_COMPANIES = new Set([
+  'markham honda',
+  'dodge city smiles',
+]);
+
 export const SHEET_NAMES = [
   'Customers & Partners',
   'Defense Manufacturers - 1B+',
@@ -118,7 +124,7 @@ function parseNewSheet(rows: unknown[][], hasCategory: boolean): Company[] {
     const row = rawRow as (string | number)[];
     const rawName = String(row[idx('Company Name')] ?? '').trim();
     const name = NEW_FILE_NAME_FIXES[rawName.toLowerCase()] ?? rawName;
-    if (!name) continue;
+    if (!name || EXCLUDED_COMPANIES.has(name.toLowerCase())) continue;
 
     if (!companyMap.has(name)) {
       const revenue = String(
@@ -190,7 +196,7 @@ function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; co
     const displayName = OLD_FILE_TYPOS[raw.toLowerCase()] ?? raw;
     const company = displayName.toLowerCase();
     const contactName = String(row[contactIdx] ?? '').trim();
-    if (!company || !contactName) continue;
+    if (!company || !contactName || EXCLUDED_COMPANIES.has(company)) continue;
 
     if (!result.has(company)) result.set(company, { displayName, contacts: [] });
     result.get(company)!.contacts.push({
