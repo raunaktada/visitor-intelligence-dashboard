@@ -35,37 +35,66 @@ const OLD_TO_NEW: Record<string, string> = {
   'CPG':                  'CPG - 1B+',
 };
 
-const REVENUE_OVERRIDES: Record<string, string> = {
-  'lockheed martin':     '$71.0',
-  'kbr inc.':            '$7.4',
-  'kbr inc':             '$7.4',
-  '3m':                  '$24.6',
-  'parker hannifin':     '$19.9',
-  'grainger':            '$16.5',
-  'domtar':              '$5.4',
-  'adentra group':       '$2.3',
-  'siemens':             '$90.4',
-  'mccormick fona':      '$6.7',
-  'adventhealth':        '$9.0',
-  'trimedx':             '$0.3',
-  'peloton interactive': '$0.7',
-  'lozier corporation':  '$0.5',
-  'oshkosh defense':     '$10.1',
-  'bd':                  '$20.2',
-  'becton dickinson':    '$20.2',
-  'bd (becton dickinson)': '$20.2',
-  'examworks':           '$1.2',
-  'sciex':               '$1.0',
-  'parker lord':         '$1.1',
-  'ab inbev':            '$57.7',
-  'a inev':              '$57.7', // corrupted "AB InBev" in source data
-  'solar turbines':      '$3.1',
-  'solar turines':       '$3.1', // typo in source data
-  'crate and barrel':    '$2.5',
-  'crate & barrel':      '$2.5',
-  'crate and arrel':     '$2.5', // typo in source data
-  'milton cat':          '$0.72',
+// Correct known typos in the NEW SharePoint file's company names
+const NEW_FILE_NAME_FIXES: Record<string, string> = {
+  'solar turines':                'Solar Turbines',
+  'a inev':                       'AB InBev',
+  'applied industrial tech inc.': 'Applied Industrial Technologies, Inc.',
+  'crate and arrel':              'Crate and Barrel',
+  'siemens':                      'Siemens Healthineers',
 };
+
+const REVENUE_OVERRIDES: Record<string, string> = {
+  'lockheed martin':              '$71.0',
+  'kbr inc.':                     '$7.4',
+  'kbr inc':                      '$7.4',
+  '3m':                           '$24.6',
+  'parker hannifin':              '$19.9',
+  'grainger':                     '$16.5',
+  'domtar':                       '$5.4',
+  'siemens':                      '$22.0',
+  'siemens healthineers':         '$22.0',
+  'mccormick fona':               '$6.7',
+  'adventhealth':                 '$9.0',
+  'trimedx':                      '$0.3',
+  'peloton interactive':          '$0.7',
+  'lozier corporation':           '$0.5',
+  'oshkosh defense':              '$10.1',
+  'bd':                           '$20.2',
+  'becton dickinson':             '$20.2',
+  'bd (becton dickinson)':        '$20.2',
+  'examworks':                    '$1.2',
+  'sciex':                        '$1.0',
+  'parker lord':                  '$1.1',
+  'ab inbev':                     '$57.7',
+  'a inev':                       '$57.7',
+  'solar turbines':               '$3.1',
+  'solar turines':                '$3.1',
+  'crate and barrel':             '$2.5',
+  'crate & barrel':               '$2.5',
+  'crate and arrel':              '$2.5',
+  'milton cat':                   '$0.72',
+  'regal rexnord corporation':    '$5.8',
+  'varsity spirit':               '$0.4',
+  'alphakor group':               '$0.05',
+  'piedmont':                     '$6.5',
+};
+
+const EXCLUDED_COMPANIES = new Set([
+  'markham honda',
+  'dodge city smiles',
+  'onesource distributors',
+  'kamco supply corp.',
+  'gec2',
+  'blick center',
+  'adentra group',
+  'oliver wyman',
+  'parkview julian convalescent',
+  'center for prevention of abuse',
+  'maryhaven, inc.',
+  'lifestance health',
+  'examworks',
+]);
 
 export const SHEET_NAMES = [
   'Customers & Partners',
@@ -108,8 +137,9 @@ function parseNewSheet(rows: unknown[][], hasCategory: boolean): Company[] {
 
   for (const rawRow of rows.slice(1)) {
     const row = rawRow as (string | number)[];
-    const name = String(row[idx('Company Name')] ?? '').trim();
-    if (!name) continue;
+    const rawName = String(row[idx('Company Name')] ?? '').trim();
+    const name = NEW_FILE_NAME_FIXES[rawName.toLowerCase()] ?? rawName;
+    if (!name || EXCLUDED_COMPANIES.has(name.toLowerCase())) continue;
 
     if (!companyMap.has(name)) {
       const revenue = String(
@@ -153,10 +183,13 @@ const OLD_FILE_TYPOS: Record<string, string> = {
   'p p.l.c.':                   'BP p.l.c.',
   'target rands, inc':          'Target Brands, Inc',
   'procter & gamle':            'Procter & Gamble',
-  'h-e-':                       'H-E-',
+  'h-e-':                       'H-E-B',
   'ulta eauty':                 'Ulta Beauty',
   'en e. keith foods':          'Ben E. Keith Foods',
   'the lurizol corporation':    'The Lubrizol Corporation',
+  'a inev':                     'AB InBev',
+  'crate and arrel':            'Crate and Barrel',
+  'siemens':                    'Siemens Healthineers',
 };
 
 // Returns contacts grouped by normalized company name from old file
@@ -179,7 +212,7 @@ function parseOldSheet(rows: unknown[][]): Map<string, { displayName: string; co
     const displayName = OLD_FILE_TYPOS[raw.toLowerCase()] ?? raw;
     const company = displayName.toLowerCase();
     const contactName = String(row[contactIdx] ?? '').trim();
-    if (!company || !contactName) continue;
+    if (!company || !contactName || EXCLUDED_COMPANIES.has(company)) continue;
 
     if (!result.has(company)) result.set(company, { displayName, contacts: [] });
     result.get(company)!.contacts.push({

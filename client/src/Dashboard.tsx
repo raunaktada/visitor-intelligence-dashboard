@@ -612,7 +612,7 @@ export default function Dashboard() {
     showToast(`Exported ${total} companies across all tabs`);
   };
 
-  const showCategory = activeTab === 'under1b' || activeTab === 'all' || activeTab === 'manufacturing' || activeTab === 'healthcare';
+  const showCategory = activeTab === 'under1b' || activeTab === 'all';
   const colSpan = showCategory ? 6 : 5;
 
   return (
