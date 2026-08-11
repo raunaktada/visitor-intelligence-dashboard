@@ -582,7 +582,22 @@ export default function Dashboard() {
             return m && (m.users > 0 || m.sessions > 0);
           }).length;
     }
-    counts['all'] = (Object.keys(counts) as TabId[]).reduce((sum, id) => sum + (counts[id] ?? 0), 0);
+    const seen = new Set<string>();
+    let allCount = 0;
+    for (const tab of TABS.filter(t => t.id !== 'all')) {
+      for (const c of (dedupedData[tab.sheet] ?? [])) {
+        const key = normalizeName(c.name);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        if (revenueInBillions(cleanRevenue(c.revenue)) < 0.25) continue;
+        if (selectedMonth !== 'all') {
+          const m = c.months[selectedMonth];
+          if (!m || (m.users === 0 && m.sessions === 0)) continue;
+        }
+        allCount++;
+      }
+    }
+    counts['all'] = allCount;
     return counts;
   }, [dedupedData, selectedMonth]);
 
