@@ -123,6 +123,9 @@ const EXCLUDED_COMPANIES = new Set([
   // Under $1B non-fit
   'peloton interactive',
   'papa murphy\'s international',
+  'ogcc behavioral service center inc',
+  'brightstar care',
+  'senderra rx specialty pharmacy',
 ]);
 
 export const SHEET_NAMES = [

@@ -109,6 +109,9 @@ const UNDER1B_CATEGORIES: Record<string, string> = {
   'milton catt':                               'Manufacturing',
   'parker lord':                               'Manufacturing',
   'adentra group':                             'Manufacturing',
+  'pratt industries':                          'Manufacturing',
+  'wabtec corporation':                        'Manufacturing',
+  'new york jewelers':                         'CPG',
 };
 
 // Sub-categories for Manufacturing tab companies
