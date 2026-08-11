@@ -87,6 +87,7 @@ const EXCLUDED_COMPANIES = new Set([
   'gec2',
   'blick center',
   'adentra group',
+  'oliver wyman',
 ]);
 
 export const SHEET_NAMES = [
