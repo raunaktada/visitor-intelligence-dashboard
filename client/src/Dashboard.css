@@ -6,8 +6,8 @@
   --border:    #54375a;
   --text:      #f5f3f6;
   --muted:     #b8a8bd;
-  --accent:    #1eaabc;
-  --accent-h:  #1defff;
+  --accent:    #1defff;
+  --accent-h:  #00f0ff;
   --success:   #22c55e;
   --warning:   #f59e0b;
   --danger:    #ff635d;
@@ -50,12 +50,12 @@ body {
   gap: 12px;
 }
 
+.tada-logo { display: block; }
+
 .dashboard-header h1 {
-  font-size: 22px;
-  font-weight: 700;
-  background: linear-gradient(135deg, #1defff, #1eaabc);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--muted);
 }
 
 .brand-badge {
@@ -113,7 +113,7 @@ body {
 
 .btn-primary {
   background: var(--accent);
-  color: #fff;
+  color: #0a0a14;
 }
 .btn-primary:hover:not(:disabled) { background: var(--accent-h); }
 
@@ -544,7 +544,7 @@ body {
 .month-btn-active {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: #0a0a14;
 }
 
 /* ─── View toggle (Companies / Individuals) ──────────────────────────────────── */
@@ -577,7 +577,7 @@ body {
 .toggle-btn:hover { color: var(--text); }
 .toggle-active {
   background: var(--accent);
-  color: #fff;
+  color: #0a0a14;
 }
 
 .filters-right {

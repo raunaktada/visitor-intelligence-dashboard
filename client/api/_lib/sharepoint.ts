@@ -153,10 +153,11 @@ const OLD_FILE_TYPOS: Record<string, string> = {
   'p p.l.c.':                   'BP p.l.c.',
   'target rands, inc':          'Target Brands, Inc',
   'procter & gamle':            'Procter & Gamble',
-  'h-e-':                       'H-E-',
+  'h-e-':                       'H-E-B',
   'ulta eauty':                 'Ulta Beauty',
   'en e. keith foods':          'Ben E. Keith Foods',
   'the lurizol corporation':    'The Lubrizol Corporation',
+  'a inev':                     'AB InBev',
 };
 
 // Returns contacts grouped by normalized company name from old file

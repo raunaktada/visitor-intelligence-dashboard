@@ -4,7 +4,7 @@ import './Dashboard.css';
 
 const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'];
 
-type TabId = 'customers' | 'defense' | 'datacenter' | 'manufacturing' | 'healthcare' | 'cpg' | 'under1b';
+type TabId = 'all' | 'customers' | 'defense' | 'datacenter' | 'manufacturing' | 'healthcare' | 'cpg' | 'under1b';
 
 interface MonthData { users: number; sessions: number; views: number; }
 interface Contact { name: string; title: string; email: string; linkedin: string; pageViewed: string; }
@@ -21,6 +21,7 @@ interface Individual {
 }
 
 const TABS: { id: TabId; label: string; sheet: string }[] = [
+  { id: 'all',           label: 'All Companies',        sheet: '' },
   { id: 'customers',     label: 'Customers & Partners', sheet: 'Customers & Partners' },
   { id: 'defense',       label: 'Defense',              sheet: 'Defense Manufacturers - 1B+' },
   { id: 'datacenter',    label: 'Data Center',          sheet: 'Data Center Mfg - 1B+' },
@@ -29,6 +30,26 @@ const TABS: { id: TabId; label: string; sheet: string }[] = [
   { id: 'cpg',           label: 'CPG',                  sheet: 'CPG - 1B+' },
   { id: 'under1b',       label: 'Under $1B',            sheet: 'Under $1B (250M-1B)' },
 ];
+
+// Strip legal suffixes for fuzzy dedup (mirrors sharepoint normalizeName)
+function normalizeName(n: string): string {
+  return n.toLowerCase()
+    .replace(/[',]/g, '')
+    .replace(/\b(inc|llc|corp|corporation|ltd|plc|co|company|systems?|group|holdings|international|global|enterprises|industries)\b/g, '')
+    .replace(/[^a-z0-9]/g, '')
+    .trim();
+}
+
+// Map industry tab id → human-readable label for "All Companies" category column
+const TAB_LABELS: Record<string, string> = {
+  customers: 'Customers & Partners',
+  defense: 'Defense',
+  datacenter: 'Data Center',
+  manufacturing: 'Manufacturing',
+  healthcare: 'Healthcare / MedTech',
+  cpg: 'CPG',
+  under1b: 'Under $1B',
+};
 
 const API_URL = import.meta.env.PROD ? '' : ((import.meta.env.VITE_API_URL as string) || 'http://localhost:5001');
 
@@ -134,7 +155,7 @@ export default function Dashboard() {
     const result: Record<string, Company[]> = {};
     for (const sheet of SHEET_PRIORITY) {
       result[sheet] = (allData[sheet] ?? []).filter(c => {
-        const key = c.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        const key = normalizeName(c.name);
         if (claimed.has(key)) return false;
         claimed.add(key);
         return true;
@@ -144,7 +165,23 @@ export default function Dashboard() {
   }, [allData]);
 
   const activeSheet = TABS.find(t => t.id === activeTab)!.sheet;
-  const sheetCompanies: Company[] = useMemo(() => dedupedData[activeSheet] ?? [], [dedupedData, activeSheet]);
+  const sheetCompanies: Company[] = useMemo(() => {
+    if (activeTab === 'all') {
+      // Combine all sheets in priority order, tagging each company with its industry
+      const seen = new Set<string>();
+      const result: Company[] = [];
+      for (const tab of TABS.filter(t => t.id !== 'all')) {
+        for (const c of (dedupedData[tab.sheet] ?? [])) {
+          const key = normalizeName(c.name);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          result.push({ ...c, category: TAB_LABELS[tab.id] ?? tab.label });
+        }
+      }
+      return result;
+    }
+    return dedupedData[activeSheet] ?? [];
+  }, [dedupedData, activeSheet, activeTab]);
 
   // Company view: Sales Intel data only, sorted by sessions desc
   const addTotals = useCallback((c: Company) => {
@@ -161,7 +198,9 @@ export default function Dashboard() {
 
   const companiesWithTotals = useMemo(() => {
     let base: Company[];
-    if (activeTab === 'under1b') {
+    if (activeTab === 'all') {
+      base = sheetCompanies; // already merged + deduped in sheetCompanies memo
+    } else if (activeTab === 'under1b') {
       // Include the under1b sheet + overflow from other sheets where revenue < $1B
       const under1bNames = new Set((dedupedData['Under $1B (250M-1B)'] ?? []).map(c => c.name.toLowerCase()));
       const overflow: Company[] = [];
@@ -239,7 +278,11 @@ export default function Dashboard() {
 
   const tabCounts = useMemo(() => {
     const counts = {} as Record<TabId, number>;
-    for (const tab of TABS) counts[tab.id] = (dedupedData[tab.sheet] ?? []).length;
+    for (const tab of TABS) {
+      if (tab.id === 'all') continue;
+      counts[tab.id] = (dedupedData[tab.sheet] ?? []).length;
+    }
+    counts['all'] = Object.values(dedupedData).reduce((sum, arr) => sum + arr.length, 0);
     return counts;
   }, [dedupedData]);
 
@@ -273,14 +316,22 @@ export default function Dashboard() {
     showToast(`Exported ${total} companies across all tabs`);
   };
 
-  const colSpan = activeTab === 'under1b' ? 6 : 5;
+  const showCategory = activeTab === 'under1b' || activeTab === 'all';
+  const colSpan = showCategory ? 6 : 5;
 
   return (
     <div className="dashboard">
       {toast && <div className="toast">{toast}</div>}
 
       <header className="dashboard-header">
-        <div className="header-left"><h1>Website Visitors</h1></div>
+        <div className="header-left">
+          <svg className="tada-logo" width="130" height="36" viewBox="0 0 130 36" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <polyline points="22,4 6,18 22,32" stroke="#FF6B5B" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none"/>
+            <polyline points="14,4 4,18 14,32" stroke="#FF6B5B" strokeWidth="3.5" strokeLinecap="round" strokeLinejoin="round" fill="none" opacity="0.55"/>
+            <text x="30" y="26" fontFamily="Space Grotesk, Inter, system-ui, sans-serif" fontSize="22" fontWeight="700" fill="#1defff" letterSpacing="1">TADA</text>
+          </svg>
+          <h1>Website Visitors</h1>
+        </div>
         <div className="header-right">
           <button className="btn btn-secondary" onClick={exportTab} disabled={!filtered.length}>↓ Export Tab</button>
           <button className="btn btn-secondary" onClick={exportAll} disabled={loading}>↓ Export All</button>
@@ -358,7 +409,7 @@ export default function Dashboard() {
               <tr>
                 <th>Company</th>
                 <th>Revenue (Billions)</th>
-                {activeTab === 'under1b' && <th>Category</th>}
+                {showCategory && <th>Category</th>}
                 <th className="num-col">Users</th>
                 <th className="num-col">Sessions</th>
                 <th className="num-col">Views</th>
@@ -371,7 +422,7 @@ export default function Dashboard() {
                 <tr key={i}>
                   <td>{c.name}</td>
                   <td className="secondary-text">{c.revenue}</td>
-                  {activeTab === 'under1b' && <td className="secondary-text">{c.category}</td>}
+                  {showCategory && <td className="secondary-text">{c.category}</td>}
                   <td className="num-col">{(c as any).users || 0}</td>
                   <td className="num-col">{(c as any).sessions || 0}</td>
                   <td className="num-col">{(c as any).views || 0}</td>
