@@ -619,7 +619,7 @@ export default function Dashboard() {
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), tab.label.substring(0, 31));
       total += rows.length;
     }
-    if (!total) return;
+    if (!total) { showToast('No data to export — please wait for data to load'); return; }
     XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_All.xlsx`);
     showToast(`Exported ${total} companies across all tabs`);
   };
