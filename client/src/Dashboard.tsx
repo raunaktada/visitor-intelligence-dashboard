@@ -505,7 +505,9 @@ export default function Dashboard() {
         : sheetCompanies.filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 1);
     }
 
-    return base.map(addTotals)
+    return base
+      .filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
+      .map(addTotals)
       .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
       .sort((a, b) => {
         const ra = parseFloat((a.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
@@ -566,11 +568,19 @@ export default function Dashboard() {
     const counts = {} as Record<TabId, number>;
     for (const tab of TABS) {
       if (tab.id === 'all') continue;
-      counts[tab.id] = (dedupedData[tab.sheet] ?? []).length;
+      const companies = (dedupedData[tab.sheet] ?? []).filter(
+        c => revenueInBillions(cleanRevenue(c.revenue)) >= 0.25
+      );
+      counts[tab.id] = selectedMonth === 'all'
+        ? companies.length
+        : companies.filter(c => {
+            const m = c.months[selectedMonth];
+            return m && (m.users > 0 || m.sessions > 0);
+          }).length;
     }
-    counts['all'] = Object.values(dedupedData).reduce((sum, arr) => sum + arr.length, 0);
+    counts['all'] = (Object.keys(counts) as TabId[]).reduce((sum, id) => sum + (counts[id] ?? 0), 0);
     return counts;
-  }, [dedupedData]);
+  }, [dedupedData, selectedMonth]);
 
   const currentMonthLabel = selectedMonth === 'all' ? 'All_Time' : selectedMonth.replace(' ', '_');
   const currentTabLabel   = TABS.find(t => t.id === activeTab)!.label;
