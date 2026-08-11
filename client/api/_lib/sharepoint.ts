@@ -96,6 +96,16 @@ const EXCLUDED_COMPANIES = new Set([
   'maryhaven, inc.',
   'lifestance health',
   'examworks',
+  // Health Insurance & Benefits
+  'unitedhealth group',
+  'cvs health',
+  'united healthcare services, inc.',
+  'optum',
+  'elevance health',
+  'walgreen co',
+  // Healthcare IT & Services
+  'change healthcare',
+  'evolent health',
 ]);
 
 export const SHEET_NAMES = [
