@@ -70,6 +70,9 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'crate & barrel':      '$2.5',
   'crate and arrel':     '$2.5', // typo in source data
   'milton cat':          '$0.72',
+  'regal rexnord corporation': '$5.8',
+  'varsity spirit':      '$0.4',
+  'alphakor group':      '$0.05',
 };
 
 export const SHEET_NAMES = [
@@ -164,6 +167,7 @@ const OLD_FILE_TYPOS: Record<string, string> = {
   'en e. keith foods':          'Ben E. Keith Foods',
   'the lurizol corporation':    'The Lubrizol Corporation',
   'a inev':                     'AB InBev',
+  'crate and arrel':            'Crate and Barrel',
 };
 
 // Returns contacts grouped by normalized company name from old file
