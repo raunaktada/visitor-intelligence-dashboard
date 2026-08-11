@@ -617,27 +617,32 @@ export default function Dashboard() {
   };
 
   const exportAll = () => {
-    const wb = XLSX.utils.book_new();
-    let total = 0;
-    for (const tab of TABS) {
-      if (tab.id === 'all') continue;
-      const companies = (dedupedData[tab.sheet] ?? [])
-        .filter(c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
-        .map(addTotals);
-      if (!companies.length) continue;
-      const rows = companies.map(c => ({
-        'Company Name': c.name,
-        'Revenue (Billions)': c.revenue,
-        Users: (c as any).users,
-        Sessions: (c as any).sessions,
-        Views: (c as any).views,
-      }));
-      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), tab.label.substring(0, 31));
-      total += rows.length;
+    try {
+      const wb = XLSX.utils.book_new();
+      let total = 0;
+      for (const tab of TABS) {
+        if (tab.id === 'all') continue;
+        const companies = (dedupedData[tab.sheet] ?? [])
+          .filter(c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
+          .map(addTotals);
+        if (!companies.length) continue;
+        const rows = companies.map(c => ({
+          'Company Name': c.name,
+          'Revenue (Billions)': c.revenue,
+          Users: (c as any).users,
+          Sessions: (c as any).sessions,
+          Views: (c as any).views,
+        }));
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), tab.label.substring(0, 31));
+        total += rows.length;
+      }
+      if (!total) { showToast('No data to export — please wait for data to load'); return; }
+      XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_All.xlsx`);
+      showToast(`Exported ${total} companies across all tabs`);
+    } catch (err) {
+      console.error('Export All failed:', err);
+      showToast(`Export failed: ${err instanceof Error ? err.message : String(err)}`);
     }
-    if (!total) { showToast('No data to export — please wait for data to load'); return; }
-    XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_All.xlsx`);
-    showToast(`Exported ${total} companies across all tabs`);
   };
 
   const showCategory = activeTab === 'under1b' || activeTab === 'all';
