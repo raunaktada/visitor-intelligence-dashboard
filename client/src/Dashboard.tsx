@@ -633,7 +633,8 @@ export default function Dashboard() {
           Sessions: (c as any).sessions,
           Views: (c as any).views,
         }));
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), tab.label.substring(0, 31));
+        const sheetName = tab.label.replace(/[:\\/?*[\]]/g, '-').substring(0, 31);
+        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), sheetName);
         total += rows.length;
       }
       if (!total) { showToast('No data to export — please wait for data to load'); return; }
