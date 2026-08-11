@@ -230,6 +230,8 @@ export default function Dashboard() {
     'varsity spirit':               'CPG - 1B+',
     'stein mart, inc':              'CPG - 1B+',
     'no more tears inc':            'CPG - 1B+',
+    'aed essentials':               'Healthcare_MedTech - 1B+',
+    'piedmont':                     'Healthcare_MedTech - 1B+',
   };
 
   const dedupedData = useMemo(() => {

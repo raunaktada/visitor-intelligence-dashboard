@@ -37,7 +37,9 @@ const OLD_TO_NEW: Record<string, string> = {
 
 // Correct known typos in the NEW SharePoint file's company names
 const NEW_FILE_NAME_FIXES: Record<string, string> = {
-  'solar turines': 'Solar Turbines',
+  'solar turines':              'Solar Turbines',
+  'a inev':                     'AB InBev',
+  'applied industrial tech inc.': 'Applied Industrial Technologies, Inc.',
 };
 
 const REVENUE_OVERRIDES: Record<string, string> = {
@@ -73,6 +75,7 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'regal rexnord corporation': '$5.8',
   'varsity spirit':      '$0.4',
   'alphakor group':      '$0.05',
+  'piedmont':            '$6.5',
 };
 
 // Companies to exclude entirely from the dashboard (bad data in SharePoint)
