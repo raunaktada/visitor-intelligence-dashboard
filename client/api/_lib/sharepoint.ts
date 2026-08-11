@@ -82,6 +82,11 @@ const REVENUE_OVERRIDES: Record<string, string> = {
 const EXCLUDED_COMPANIES = new Set([
   'markham honda',
   'dodge city smiles',
+  'onesource distributors',
+  'kamco supply corp.',
+  'gec2',
+  'blick center',
+  'adentra group',
 ]);
 
 export const SHEET_NAMES = [
