@@ -506,7 +506,7 @@ export default function Dashboard() {
     showToast(`Exported ${total} companies across all tabs`);
   };
 
-  const showCategory = activeTab === 'under1b' || activeTab === 'all' || activeTab === 'manufacturing' || activeTab === 'cpg';
+  const showCategory = activeTab === 'under1b' || activeTab === 'all' || activeTab === 'manufacturing';
   const colSpan = showCategory ? 6 : 5;
 
   return (
