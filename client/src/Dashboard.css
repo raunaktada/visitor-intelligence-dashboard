@@ -377,6 +377,9 @@ body {
 
 .center { text-align: center; }
 
+.visitors-table th.num-col,
+.visitors-table td.num-col { text-align: right; }
+
 .secondary-text {
   color: var(--muted);
   font-size: 12px;
