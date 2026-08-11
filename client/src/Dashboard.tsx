@@ -40,6 +40,77 @@ function normalizeName(n: string): string {
     .trim();
 }
 
+// Hardcoded categories for Under $1B companies missing Category in the sheet
+const UNDER1B_CATEGORIES: Record<string, string> = {
+  // Healthcare / MedTech
+  'hnl lab medicine':                          'Healthcare / MedTech',
+  'ocli vision':                               'Healthcare / MedTech',
+  'blanchard valley health system':            'Healthcare / MedTech',
+  'texoma medical center':                     'Healthcare / MedTech',
+  'the stepping stones group, llc':            'Healthcare / MedTech',
+  'hurley medical center':                     'Healthcare / MedTech',
+  'palos health':                              'Healthcare / MedTech',
+  "children's hospital of the king's daughters": 'Healthcare / MedTech',
+  'crouse health':                             'Healthcare / MedTech',
+  'springfield clinic':                        'Healthcare / MedTech',
+  'senderra rx specialty pharmacy':            'Healthcare / MedTech',
+  'brightstar care':                           'Healthcare / MedTech',
+  'owensboro health':                          'Healthcare / MedTech',
+  "nicklaus children's health system":         'Healthcare / MedTech',
+  'starkey hearing':                           'Healthcare / MedTech',
+  'lifehealthcare':                            'Healthcare / MedTech',
+  'mary washington healthcare':                'Healthcare / MedTech',
+  'hillcrest healthcare system':               'Healthcare / MedTech',
+  'eyebuydirect':                              'Healthcare / MedTech',
+  'piedmont':                                  'Healthcare / MedTech',
+  // CPG
+  "stella & chewy's":                         'CPG',
+  'varsity spirit':                            'CPG',
+  "papa murphy's international":               'CPG',
+  'world market':                              'CPG',
+  'rodan + fields':                            'CPG',
+  // Defense
+  'draper':                                    'Defense',
+  'sos international llc':                     'Defense',
+  'janicki industries':                        'Defense',
+  // Manufacturing
+  "d'addario & company, inc.":                 'Manufacturing',
+  'gsfsgroup':                                 'Manufacturing',
+  'the tile shop':                             'Manufacturing',
+  'camco manufacturing inc.':                  'Manufacturing',
+  'warn industries':                           'Manufacturing',
+  'civic merchandising inc':                   'Manufacturing',
+  'kamco supply corp.':                        'Manufacturing',
+  'giesecke & devrient america, inc':          'Manufacturing',
+  'sb energy':                                 'Manufacturing',
+  'aaf international':                         'Manufacturing',
+  'core molding technologies':                 'Manufacturing',
+  'piedmont plastics':                         'Manufacturing',
+  'heatcraft worldwide refrigeration':         'Manufacturing',
+  'techniplas':                                'Manufacturing',
+  'carolina cat':                              'Manufacturing',
+  'douglas dynamics, inc.':                    'Manufacturing',
+  'onesource distributors':                    'Manufacturing',
+  'cognex corporation':                        'Manufacturing',
+  'chemtreat, inc':                            'Manufacturing',
+  'crane chempharma & energy':                 'Manufacturing',
+  'mustang cat':                               'Manufacturing',
+  'carter machinery':                          'Manufacturing',
+  'kamax':                                     'Manufacturing',
+  'oregon tool, inc':                          'Manufacturing',
+  'infineum':                                  'Manufacturing',
+  'ogcc behavioral service center inc':        'Healthcare / MedTech',
+  // Revenue-overflow companies that land in Under $1B
+  'peloton interactive':                       'Manufacturing',
+  'lozier corporation':                        'Manufacturing',
+  'trimedx':                                   'Healthcare / MedTech',
+  'solar turbines':                            'Manufacturing',
+  'milton cat':                                'Manufacturing',
+  'milton catt':                               'Manufacturing',
+  'parker lord':                               'Manufacturing',
+  'adentra group':                             'Manufacturing',
+};
+
 // Map industry tab id → human-readable label for "All Companies" category column
 const TAB_LABELS: Record<string, string> = {
   customers: 'Customers & Partners',
@@ -185,15 +256,16 @@ export default function Dashboard() {
 
   // Company view: Sales Intel data only, sorted by sessions desc
   const addTotals = useCallback((c: Company) => {
+    const category = c.category || UNDER1B_CATEGORIES[c.name.toLowerCase()] || '';
     if (selectedMonth === 'all') {
       const t = Object.values(c.months).reduce(
         (a, m) => ({ users: a.users + m.users, sessions: a.sessions + m.sessions, views: a.views + m.views }),
         { users: 0, sessions: 0, views: 0 }
       );
-      return { ...c, revenue: cleanRevenue(c.revenue), ...t };
+      return { ...c, category, revenue: cleanRevenue(c.revenue), ...t };
     }
     const m = c.months[selectedMonth] ?? { users: 0, sessions: 0, views: 0 };
-    return { ...c, revenue: cleanRevenue(c.revenue), ...m };
+    return { ...c, category, revenue: cleanRevenue(c.revenue), ...m };
   }, [selectedMonth]);
 
   const companiesWithTotals = useMemo(() => {
