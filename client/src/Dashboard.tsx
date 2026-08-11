@@ -111,6 +111,105 @@ const UNDER1B_CATEGORIES: Record<string, string> = {
   'adentra group':                             'Manufacturing',
 };
 
+// Sub-categories for Manufacturing tab companies
+const MFG_CATEGORIES: Record<string, string> = {
+  // Automotive & Mobility
+  'general motors':                   'Automotive & Mobility',
+  'tesla, inc.':                      'Automotive & Mobility',
+  'nissan motor corporation':         'Automotive & Mobility',
+  'daimler truck holding':            'Automotive & Mobility',
+  'volkswagen of america, inc':       'Automotive & Mobility',
+  'american honda motor co., inc.':   'Automotive & Mobility',
+  'adient':                           'Automotive & Mobility',
+  'dana limited':                     'Automotive & Mobility',
+  'mahle gmbh':                       'Automotive & Mobility',
+  'clarios':                          'Automotive & Mobility',
+  'inteva products':                  'Automotive & Mobility',
+  'maxxis international':             'Automotive & Mobility',
+  'goodyear tire & rubber':           'Automotive & Mobility',
+  'cnh industrial':                   'Automotive & Mobility',
+  'embraco':                          'Automotive & Mobility',
+  'hutchinson industries, inc':       'Automotive & Mobility',
+  // Electronics, Electrical & Technology
+  'apple inc.':                       'Electronics, Electrical & Technology',
+  'foxconn':                          'Electronics, Electrical & Technology',
+  'panasonic':                        'Electronics, Electrical & Technology',
+  'honeywell':                        'Electronics, Electrical & Technology',
+  'general electric':                 'Electronics, Electrical & Technology',
+  'eaton':                            'Electronics, Electrical & Technology',
+  'samsung':                          'Electronics, Electrical & Technology',
+  'motorola mobility llc':            'Electronics, Electrical & Technology',
+  'superior essex':                   'Electronics, Electrical & Technology',
+  't3 automation':                    'Electronics, Electrical & Technology',
+  'julian electric inc.':             'Electronics, Electrical & Technology',
+  'acuity brands, inc':               'Electronics, Electrical & Technology',
+  'signify':                          'Electronics, Electrical & Technology',
+  'sensata technologies, inc':        'Electronics, Electrical & Technology',
+  'nidec':                            'Electronics, Electrical & Technology',
+  'kuka':                             'Electronics, Electrical & Technology',
+  'wavetronix':                       'Electronics, Electrical & Technology',
+  'coorsTek, inc.':                   'Electronics, Electrical & Technology',
+  // Industrial Machinery & Equipment
+  'johnson controls':                 'Industrial Machinery & Equipment',
+  'heatcraft worldwide refrigeration':'Industrial Machinery & Equipment',
+  'stanley black & decker':           'Industrial Machinery & Equipment',
+  'kress corporation':                'Industrial Machinery & Equipment',
+  'agrinautics, inc.':                'Industrial Machinery & Equipment',
+  'metso':                            'Industrial Machinery & Equipment',
+  'lennox international inc':         'Industrial Machinery & Equipment',
+  'konecranes':                       'Industrial Machinery & Equipment',
+  'donaldson company, inc':           'Industrial Machinery & Equipment',
+  'solar turbines':                   'Industrial Machinery & Equipment',
+  'nordson':                          'Industrial Machinery & Equipment',
+  'regal rexnord corporation':        'Industrial Machinery & Equipment',
+  'oregon tool, inc':                 'Industrial Machinery & Equipment',
+  'thermax limited':                  'Industrial Machinery & Equipment',
+  'hillenbrand, inc':                 'Industrial Machinery & Equipment',
+  'applied industrial technologies, inc.': 'Industrial Machinery & Equipment',
+  'micropulse':                       'Industrial Machinery & Equipment',
+  // Chemical & Specialty Chemical
+  'bp p.l.c.':                        'Chemical & Specialty Chemical',
+  'akzo nobel':                       'Chemical & Specialty Chemical',
+  'the lebermuth company':            'Chemical & Specialty Chemical',
+  'chevron phillips chemical company':'Chemical & Specialty Chemical',
+  'huntsman international llc':       'Chemical & Specialty Chemical',
+  'axalta':                           'Chemical & Specialty Chemical',
+  'dow':                              'Chemical & Specialty Chemical',
+  'the lubrizol corporation':         'Chemical & Specialty Chemical',
+  'stepan company':                   'Chemical & Specialty Chemical',
+  'wacker chemical corporation usa':  'Chemical & Specialty Chemical',
+  'element solutions inc':            'Chemical & Specialty Chemical',
+  'sea-land chemical company':        'Chemical & Specialty Chemical',
+  // Packaging, Paper & Printing
+  'international paper':              'Packaging, Paper & Printing',
+  'crown holdings, inc':              'Packaging, Paper & Printing',
+  'amcor':                            'Packaging, Paper & Printing',
+  'avery dennison corporation':       'Packaging, Paper & Printing',
+  'tetra pak':                        'Packaging, Paper & Printing',
+  'domtar':                           'Packaging, Paper & Printing',
+  'sun chemical':                     'Packaging, Paper & Printing',
+  'wendel printing':                  'Packaging, Paper & Printing',
+  'coloring book solutions':          'Packaging, Paper & Printing',
+  // Building Materials, Construction & Industrial Materials
+  'the sherwin-williams company':     'Building Materials & Construction',
+  'holcim':                           'Building Materials & Construction',
+  'ufp industries, inc':              'Building Materials & Construction',
+  'clayton homes':                    'Building Materials & Construction',
+  's.h. chooi fasteners':             'Building Materials & Construction',
+  'superior essex':                   'Building Materials & Construction',
+  // Food & Beverage
+  'ab inbev':                         'Food & Beverage',
+  'mccormick fona':                   'Food & Beverage',
+  // Consumer Products & Appliances
+  'whirlpool':                        'Consumer Products & Appliances',
+  'ge appliances':                    'Consumer Products & Appliances',
+};
+
+const CPG_CATEGORIES: Record<string, string> = {
+  'ab inbev':       'Food & Beverage',
+  'mccormick fona': 'Food & Beverage',
+};
+
 // Map industry tab id → human-readable label for "All Companies" category column
 const TAB_LABELS: Record<string, string> = {
   customers: 'Customers & Partners',
@@ -232,6 +331,8 @@ export default function Dashboard() {
     'no more tears inc':            'CPG - 1B+',
     'aed essentials':               'Healthcare_MedTech - 1B+',
     'piedmont':                     'Healthcare_MedTech - 1B+',
+    'ab inbev':                     'CPG - 1B+',
+    'mccormick fona':               'CPG - 1B+',
   };
 
   const dedupedData = useMemo(() => {
@@ -273,7 +374,7 @@ export default function Dashboard() {
 
   // Company view: Sales Intel data only, sorted by sessions desc
   const addTotals = useCallback((c: Company) => {
-    const category = c.category || UNDER1B_CATEGORIES[c.name.toLowerCase()] || '';
+    const category = c.category || UNDER1B_CATEGORIES[c.name.toLowerCase()] || MFG_CATEGORIES[c.name.toLowerCase()] || CPG_CATEGORIES[c.name.toLowerCase()] || '';
     if (selectedMonth === 'all') {
       const t = Object.values(c.months).reduce(
         (a, m) => ({ users: a.users + m.users, sessions: a.sessions + m.sessions, views: a.views + m.views }),
@@ -405,7 +506,7 @@ export default function Dashboard() {
     showToast(`Exported ${total} companies across all tabs`);
   };
 
-  const showCategory = activeTab === 'under1b' || activeTab === 'all';
+  const showCategory = activeTab === 'under1b' || activeTab === 'all' || activeTab === 'manufacturing' || activeTab === 'cpg';
   const colSpan = showCategory ? 6 : 5;
 
   return (
