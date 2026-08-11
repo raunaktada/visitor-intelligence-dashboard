@@ -35,6 +35,11 @@ const OLD_TO_NEW: Record<string, string> = {
   'CPG':                  'CPG - 1B+',
 };
 
+// Correct known typos in the NEW SharePoint file's company names
+const NEW_FILE_NAME_FIXES: Record<string, string> = {
+  'solar turines': 'Solar Turbines',
+};
+
 const REVENUE_OVERRIDES: Record<string, string> = {
   'lockheed martin':     '$71.0',
   'kbr inc.':            '$7.4',
@@ -108,7 +113,8 @@ function parseNewSheet(rows: unknown[][], hasCategory: boolean): Company[] {
 
   for (const rawRow of rows.slice(1)) {
     const row = rawRow as (string | number)[];
-    const name = String(row[idx('Company Name')] ?? '').trim();
+    const rawName = String(row[idx('Company Name')] ?? '').trim();
+    const name = NEW_FILE_NAME_FIXES[rawName.toLowerCase()] ?? rawName;
     if (!name) continue;
 
     if (!companyMap.has(name)) {

@@ -221,16 +221,31 @@ export default function Dashboard() {
     'Manufacturing - 1B+',
     'Under $1B (250M-1B)',
   ];
+  // Companies that appear in the wrong sheet in SharePoint — force them to the right tab
+  const FORCE_TO_SHEET: Record<string, string> = {
+    'parkview julian convalescent': 'Healthcare_MedTech - 1B+',
+    'endologix llc':                'Healthcare_MedTech - 1B+',
+    'center for prevention of abuse': 'Healthcare_MedTech - 1B+',
+    'maryhaven, inc.':              'Healthcare_MedTech - 1B+',
+    'varsity spirit':               'CPG - 1B+',
+    'stein mart, inc':              'CPG - 1B+',
+    'no more tears inc':            'CPG - 1B+',
+  };
+
   const dedupedData = useMemo(() => {
     const claimed = new Set<string>();
     const result: Record<string, Company[]> = {};
+    for (const sheet of SHEET_PRIORITY) result[sheet] = [];
+
+    // First pass: assign each company to its forced sheet (if any), else its natural sheet
     for (const sheet of SHEET_PRIORITY) {
-      result[sheet] = (allData[sheet] ?? []).filter(c => {
+      for (const c of (allData[sheet] ?? [])) {
         const key = normalizeName(c.name);
-        if (claimed.has(key)) return false;
+        if (claimed.has(key)) continue;
         claimed.add(key);
-        return true;
-      });
+        const targetSheet = FORCE_TO_SHEET[c.name.toLowerCase()] ?? sheet;
+        result[targetSheet].push(c);
+      }
     }
     return result;
   }, [allData]);
