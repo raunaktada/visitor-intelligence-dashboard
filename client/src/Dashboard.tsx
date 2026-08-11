@@ -205,6 +205,105 @@ const MFG_CATEGORIES: Record<string, string> = {
   'ge appliances':                    'Consumer Products & Appliances',
 };
 
+const HEALTHCARE_CATEGORIES: Record<string, string> = {
+  // Hospitals & Health Systems
+  'adventhealth':                                        'Hospitals & Health Systems',
+  'piedmont':                                            'Hospitals & Health Systems',
+  'ssm health':                                          'Hospitals & Health Systems',
+  'commonspirit':                                        'Hospitals & Health Systems',
+  'advocate health care':                                'Hospitals & Health Systems',
+  'ochsner health':                                      'Hospitals & Health Systems',
+  'memorial hermann':                                    'Hospitals & Health Systems',
+  'bon secours mercy':                                   'Hospitals & Health Systems',
+  'carilion clinic':                                     'Hospitals & Health Systems',
+  'henry ford health':                                   'Hospitals & Health Systems',
+  'tenet healthcare':                                    'Hospitals & Health Systems',
+  'lifepoint health':                                    'Hospitals & Health Systems',
+  'hca healthcare':                                      'Hospitals & Health Systems',
+  'ascension':                                           'Hospitals & Health Systems',
+  'providence':                                          'Hospitals & Health Systems',
+  'sutter health':                                       'Hospitals & Health Systems',
+  'banner health':                                       'Hospitals & Health Systems',
+  'davita inc':                                          'Hospitals & Health Systems',
+  'community health systems':                            'Hospitals & Health Systems',
+  'johns hopkins medicine':                              'Hospitals & Health Systems',
+  'newyork-presbyterian hospital':                       'Hospitals & Health Systems',
+  'christus health':                                     'Hospitals & Health Systems',
+  'hackensack meridian health':                          'Hospitals & Health Systems',
+  'vanderbilt university medical center':                'Hospitals & Health Systems',
+  'md anderson cancer center':                           'Hospitals & Health Systems',
+  'northwestern medicine':                               'Hospitals & Health Systems',
+  'encompass health corporation':                        'Hospitals & Health Systems',
+  'endeavor health':                                     'Hospitals & Health Systems',
+  'baptist health':                                      'Hospitals & Health Systems',
+  'carle health':                                        'Hospitals & Health Systems',
+  'texas children\'s hospital':                          'Hospitals & Health Systems',
+  'yale new haven hospital':                             'Hospitals & Health Systems',
+  'froedtert health':                                    'Hospitals & Health Systems',
+  'oak street health':                                   'Hospitals & Health Systems',
+  'brown university health':                             'Hospitals & Health Systems',
+  'franciscan missionaries of our lady health system':   'Hospitals & Health Systems',
+  'catholic health':                                     'Hospitals & Health Systems',
+  'christianacare':                                      'Hospitals & Health Systems',
+  'cone health':                                         'Hospitals & Health Systems',
+  'jackson health system':                               'Hospitals & Health Systems',
+  'sca health':                                          'Hospitals & Health Systems',
+  'children\'s healthcare of atlanta':                   'Hospitals & Health Systems',
+  'university health':                                   'Hospitals & Health Systems',
+  'tower health':                                        'Hospitals & Health Systems',
+  'advent health medical group':                         'Hospitals & Health Systems',
+  'children\'s hospital colorado':                       'Hospitals & Health Systems',
+  'hca midwest health':                                  'Hospitals & Health Systems',
+  'moffitt cancer center':                               'Hospitals & Health Systems',
+  'children\'s minnesota':                               'Hospitals & Health Systems',
+  'atlanticare':                                         'Hospitals & Health Systems',
+  'bronson healthcare':                                  'Hospitals & Health Systems',
+  'sunnybrook':                                          'Hospitals & Health Systems',
+  // Medical Devices & Equipment
+  'bd (becton dickinson)':                               'Medical Devices & Equipment',
+  'baxter':                                              'Medical Devices & Equipment',
+  'zimmer biomet':                                       'Medical Devices & Equipment',
+  'endologix llc':                                       'Medical Devices & Equipment',
+  'sciex':                                               'Medical Devices & Equipment',
+  'aed essentials':                                      'Medical Devices & Equipment',
+  'trimedx':                                             'Medical Devices & Equipment',
+  'medtronic':                                           'Medical Devices & Equipment',
+  'stryker':                                             'Medical Devices & Equipment',
+  'fresenius medical care':                              'Medical Devices & Equipment',
+  'edwards lifesciences corporation':                    'Medical Devices & Equipment',
+  'hologic':                                             'Medical Devices & Equipment',
+  'icu medical':                                         'Medical Devices & Equipment',
+  'bracco':                                              'Medical Devices & Equipment',
+  'teleflex':                                            'Medical Devices & Equipment',
+  'natera':                                              'Medical Devices & Equipment',
+  'siemens healthineers':                                'Medical Devices & Equipment',
+  // Pharma & Life Sciences
+  'abbvie inc':                                          'Pharma & Life Sciences',
+  'pfizer inc':                                          'Pharma & Life Sciences',
+  'bristol myers squibb':                                'Pharma & Life Sciences',
+  'sanofi':                                              'Pharma & Life Sciences',
+  'abbott':                                              'Pharma & Life Sciences',
+  'boehringer ingelheim international gmbh':             'Pharma & Life Sciences',
+  'csl':                                                 'Pharma & Life Sciences',
+  'icon plc':                                            'Pharma & Life Sciences',
+  'dr. reddy\'s laboratories':                           'Pharma & Life Sciences',
+  'parexel international':                               'Pharma & Life Sciences',
+  'radiology partners':                                  'Pharma & Life Sciences',
+  'endo international plc':                              'Pharma & Life Sciences',
+  'jubilant':                                            'Pharma & Life Sciences',
+  'biopharmaceutical':                                   'Pharma & Life Sciences',
+  // Health Insurance & Benefits
+  'unitedhealth group':                                  'Health Insurance & Benefits',
+  'cvs health':                                          'Health Insurance & Benefits',
+  'united healthcare services, inc.':                    'Health Insurance & Benefits',
+  'optum':                                               'Health Insurance & Benefits',
+  'elevance health':                                     'Health Insurance & Benefits',
+  'walgreen co':                                         'Health Insurance & Benefits',
+  // Healthcare IT & Services
+  'onco360 oncology pharmacy':                           'Healthcare IT & Services',
+  'biopharmaceutical':                                   'Healthcare IT & Services',
+};
+
 const CPG_CATEGORIES: Record<string, string> = {
   'ab inbev':       'Food & Beverage',
   'mccormick fona': 'Food & Beverage',
@@ -371,7 +470,7 @@ export default function Dashboard() {
 
   // Company view: Sales Intel data only, sorted by sessions desc
   const addTotals = useCallback((c: Company) => {
-    const category = c.category || UNDER1B_CATEGORIES[c.name.toLowerCase()] || MFG_CATEGORIES[c.name.toLowerCase()] || CPG_CATEGORIES[c.name.toLowerCase()] || '';
+    const category = c.category || UNDER1B_CATEGORIES[c.name.toLowerCase()] || MFG_CATEGORIES[c.name.toLowerCase()] || CPG_CATEGORIES[c.name.toLowerCase()] || HEALTHCARE_CATEGORIES[c.name.toLowerCase()] || '';
     if (selectedMonth === 'all') {
       const t = Object.values(c.months).reduce(
         (a, m) => ({ users: a.users + m.users, sessions: a.sessions + m.sessions, views: a.views + m.views }),
@@ -503,7 +602,7 @@ export default function Dashboard() {
     showToast(`Exported ${total} companies across all tabs`);
   };
 
-  const showCategory = activeTab === 'under1b' || activeTab === 'all' || activeTab === 'manufacturing';
+  const showCategory = activeTab === 'under1b' || activeTab === 'all' || activeTab === 'manufacturing' || activeTab === 'healthcare';
   const colSpan = showCategory ? 6 : 5;
 
   return (

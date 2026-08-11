@@ -41,6 +41,7 @@ const NEW_FILE_NAME_FIXES: Record<string, string> = {
   'a inev':                     'AB InBev',
   'applied industrial tech inc.': 'Applied Industrial Technologies, Inc.',
   'crate and arrel':            'Crate and Barrel',
+  'siemens':                    'Siemens Healthineers',
 };
 
 const REVENUE_OVERRIDES: Record<string, string> = {
@@ -52,7 +53,8 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'grainger':            '$16.5',
   'domtar':              '$5.4',
   'adentra group':       '$2.3',
-  'siemens':             '$90.4',
+  'siemens':             '$22.0',
+  'siemens healthineers': '$22.0',
   'mccormick fona':      '$6.7',
   'adventhealth':        '$9.0',
   'trimedx':             '$0.3',
@@ -189,6 +191,7 @@ const OLD_FILE_TYPOS: Record<string, string> = {
   'the lurizol corporation':    'The Lubrizol Corporation',
   'a inev':                     'AB InBev',
   'crate and arrel':            'Crate and Barrel',
+  'siemens':                    'Siemens Healthineers',
 };
 
 // Returns contacts grouped by normalized company name from old file
