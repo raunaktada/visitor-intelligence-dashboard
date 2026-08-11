@@ -89,6 +89,11 @@ const EXCLUDED_COMPANIES = new Set([
   'blick center',
   'adentra group',
   'oliver wyman',
+  'parkview julian convalescent',
+  'center for prevention of abuse',
+  'maryhaven, inc.',
+  'lifestance health',
+  'examworks',
 ]);
 
 export const SHEET_NAMES = [

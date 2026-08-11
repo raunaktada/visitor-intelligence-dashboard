@@ -322,10 +322,7 @@ export default function Dashboard() {
   ];
   // Companies that appear in the wrong sheet in SharePoint — force them to the right tab
   const FORCE_TO_SHEET: Record<string, string> = {
-    'parkview julian convalescent': 'Healthcare_MedTech - 1B+',
     'endologix llc':                'Healthcare_MedTech - 1B+',
-    'center for prevention of abuse': 'Healthcare_MedTech - 1B+',
-    'maryhaven, inc.':              'Healthcare_MedTech - 1B+',
     'varsity spirit':               'CPG - 1B+',
     'stein mart, inc':              'CPG - 1B+',
     'no more tears inc':            'CPG - 1B+',
