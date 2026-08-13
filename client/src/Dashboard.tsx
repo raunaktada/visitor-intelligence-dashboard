@@ -17,7 +17,15 @@ interface Company {
 }
 interface Individual {
   firstName: string; lastName: string; email: string; company: string;
-  title: string; website: string; pageViews: number; linkedin: string;
+  title: string; website: string; lastSeenAt: string; pageViews: number; linkedin: string;
+}
+
+// Parse "DD-MM-YYYY HH:MM" → "Mon YYYY" matching MONTH_KEYS format e.g. "Feb 2026"
+function artisanMonth(lastSeenAt: string): string {
+  const [datePart] = lastSeenAt.split(' ');
+  const [, mm, yyyy] = datePart.split('-');
+  const month = new Date(Number(yyyy), Number(mm) - 1).toLocaleString('en-US', { month: 'short' });
+  return `${month} ${yyyy}`;
 }
 
 const TABS: { id: TabId; label: string; sheet: string }[] = [
@@ -430,7 +438,7 @@ function parseIndividuals(text: string): Individual[] {
     if (fields.length < 11) return [];
     return [{ firstName: fields[0].trim(), lastName: fields[1].trim(), email: fields[2].trim(),
       company: fields[3].trim(), title: fields[4].trim(), website: fields[5].trim(),
-      pageViews: parseInt(fields[7]) || 0, linkedin: fields[10].trim() }];
+      lastSeenAt: fields[6].trim(), pageViews: parseInt(fields[7]) || 0, linkedin: fields[10].trim() }];
   });
 }
 
@@ -612,8 +620,10 @@ export default function Dashboard() {
     }
 
     // Artisan individuals: only if employer matches an active company in this tab
+    // and the individual visited in the selected month
     for (const p of individuals) {
       if (!activeCompanyNames.has(normalizeName(p.company))) continue;
+      if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
       if (!isRelevantContact(p.title)) continue;
       const rawFullName = `${p.firstName} ${p.lastName}`.trim();
       const fullName = CONTACT_NAME_FIXES[contactNameKey(rawFullName)] ?? rawFullName;
