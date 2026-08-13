@@ -491,6 +491,9 @@ export default function Dashboard() {
     'mccormick fona':               'CPG - 1B+',
     'lozier corporation':           'Under $1B (250M-1B)',
     'trimedx':                      'Under $1B (250M-1B)',
+    'coorstek, inc.':               'Under $1B (250M-1B)',
+    'heatcraft worldwide refrigeration': 'Under $1B (250M-1B)',
+    'oregon tool, inc':             'Under $1B (250M-1B)',
     'parker hannifin':              'Defense Manufacturers - 1B+',
     'parker-hannifin corp':         'Defense Manufacturers - 1B+',
   };
