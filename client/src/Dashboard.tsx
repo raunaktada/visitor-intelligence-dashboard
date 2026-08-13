@@ -542,12 +542,13 @@ export default function Dashboard() {
 
     // Artisan individuals: only include if their employer matches a company in this tab
     const tabCompanyNames = new Set(sheetCompanies.map(c => normalizeName(c.name)));
-    const seen = new Set(contacts.map(p => p.name.toLowerCase()));
+    const nameKey = (n: string) => n.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
+    const seen = new Set(contacts.map(p => nameKey(p.name)));
     for (const p of individuals) {
       if (!tabCompanyNames.has(normalizeName(p.company))) continue;
-      const fullName = `${p.firstName} ${p.lastName}`.trim().toLowerCase();
-      if (seen.has(fullName)) continue;
-      seen.add(fullName);
+      const fullName = `${p.firstName} ${p.lastName}`.trim();
+      if (seen.has(nameKey(fullName))) continue;
+      seen.add(nameKey(fullName));
       contacts.push({
         name: `${p.firstName} ${p.lastName}`.trim(),
         title: p.title, company: p.company, email: p.email,
