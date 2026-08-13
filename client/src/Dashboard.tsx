@@ -748,7 +748,6 @@ export default function Dashboard() {
           <button key={tab.id} className={`tab${activeTab === tab.id ? ' tab-active' : ''}`}
             onClick={() => { setActiveTab(tab.id); setSearch(''); setViewMode('companies'); }}>
             {tab.label}
-            <span className="tab-count">{tabCounts[tab.id] ?? 0}</span>
           </button>
         ))}
       </div>
