@@ -81,6 +81,8 @@ const REVENUE_OVERRIDES: Record<string, string> = {
 };
 
 const EXCLUDED_COMPANIES = new Set([
+  'apple inc.',
+  'apple',
   'markham honda',
   'dodge city smiles',
   'onesource distributors',

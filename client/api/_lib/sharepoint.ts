@@ -83,6 +83,8 @@ const REVENUE_OVERRIDES: Record<string, string> = {
 
 // Companies to exclude entirely from the dashboard (bad data in SharePoint)
 const EXCLUDED_COMPANIES = new Set([
+  'apple inc.',
+  'apple',
   'markham honda',
   'dodge city smiles',
   'onesource distributors',
