@@ -776,8 +776,8 @@ export default function Dashboard() {
             value={search} onChange={e => setSearch(e.target.value)} />
           <span className="result-count">
             {viewMode === 'contacts'
-              ? `${filteredContacts.length} ${filteredContacts.length === 1 ? 'contact' : 'contacts'}`
-              : `${filtered.length} ${filtered.length === 1 ? 'company' : 'companies'}`}
+              ? `${filteredContacts.length} ${filteredContacts.length <= 1 ? 'contact' : 'contacts'}`
+              : `${filtered.length} ${filtered.length <= 1 ? 'company' : 'companies'}`}
           </span>
         </div>
       </div>
