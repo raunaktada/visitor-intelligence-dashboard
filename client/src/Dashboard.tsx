@@ -605,17 +605,18 @@ export default function Dashboard() {
     const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string }[] = [];
     const seen = new Set<string>();
 
-    // SharePoint contacts — dedup, fix typos, month-filter by company activity
-    for (const c of sheetCompanies) {
-      if (!activeCompanyNames.has(normalizeName(c.name))) continue;
-      for (const p of c.contacts) {
-        const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
-        const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
-        if (!isRelevantContact(rawTitle)) continue;
-        const key = contactNameKey(rawName);
-        if (seen.has(key)) continue;
-        seen.add(key);
-        contacts.push({ ...p, name: rawName, title: rawTitle, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint' });
+    // SharePoint contacts — only in All Time (no per-person visit dates available)
+    if (selectedMonth === 'all') {
+      for (const c of sheetCompanies) {
+        for (const p of c.contacts) {
+          const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
+          const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
+          if (!isRelevantContact(rawTitle)) continue;
+          const key = contactNameKey(rawName);
+          if (seen.has(key)) continue;
+          seen.add(key);
+          contacts.push({ ...p, name: rawName, title: rawTitle, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint' });
+        }
       }
     }
 
