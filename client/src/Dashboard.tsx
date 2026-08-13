@@ -575,7 +575,6 @@ export default function Dashboard() {
         const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
         // Skip junk (email in name/title field)
         if (rawName.includes('@') || rawTitle.includes('@')) continue;
-        if (!isUpperManagement(rawTitle)) continue;
         const key = contactNameKey(rawName);
         if (seen.has(key)) continue;
         seen.add(key);
@@ -587,7 +586,6 @@ export default function Dashboard() {
     const tabCompanyNames = new Set(sheetCompanies.map(c => normalizeName(c.name)));
     for (const p of individuals) {
       if (!tabCompanyNames.has(normalizeName(p.company))) continue;
-      if (!isUpperManagement(p.title)) continue;
       const fullName = `${p.firstName} ${p.lastName}`.trim();
       if (seen.has(contactNameKey(fullName))) continue;
       seen.add(contactNameKey(fullName));
