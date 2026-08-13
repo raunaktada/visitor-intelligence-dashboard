@@ -562,7 +562,7 @@ export default function Dashboard() {
     }
 
     return base
-      .filter(c => activeTab === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
+      .filter(c => activeTab === 'customers' || c.category === 'Customers & Partners' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
       .map(addTotals)
       .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
       .sort((a, b) => {
