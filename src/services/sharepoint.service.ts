@@ -162,6 +162,28 @@ const EXCLUDED_COMPANIES = new Set([
   'kwik trip, inc.',
   'stein mart, inc',
   'the exchange',
+  // NGOs / non-fits
+  'no more tears inc',
+  'the stepping stones group, llc',
+  // Manufacturing tab non-manufacturers
+  'alphakor group',
+  'carter machinery',
+  'mustang cat',
+  'milton cat',
+  'chemtreat, inc',
+  'new york jewelers',
+  // Defense duplicate
+  'parker-hannifin corp',
+  // Data Center non-fit
+  'grainger',
+  // Under $1B non-manufacturers / wrong industry
+  'eyebuydirect',
+  'gsfsgroup',
+  'sb energy',
+  'sos international llc',
+  'world market',
+  'the tile shop',
+  'civic merchandising inc',
   // Under $1B non-fit
   'peloton interactive',
   'papa murphy\'s international',

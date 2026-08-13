@@ -55,7 +55,6 @@ const UNDER1B_CATEGORIES: Record<string, string> = {
   'ocli vision':                               'Healthcare / MedTech',
   'blanchard valley health system':            'Healthcare / MedTech',
   'texoma medical center':                     'Healthcare / MedTech',
-  'the stepping stones group, llc':            'Healthcare / MedTech',
   'hurley medical center':                     'Healthcare / MedTech',
   'palos health':                              'Healthcare / MedTech',
   "children's hospital of the king's daughters": 'Healthcare / MedTech',
@@ -69,28 +68,21 @@ const UNDER1B_CATEGORIES: Record<string, string> = {
   'lifehealthcare':                            'Healthcare / MedTech',
   'mary washington healthcare':                'Healthcare / MedTech',
   'hillcrest healthcare system':               'Healthcare / MedTech',
-  'eyebuydirect':                              'Healthcare / MedTech',
   'piedmont':                                  'Healthcare / MedTech',
   // CPG
   "stella & chewy's":                         'CPG',
   'varsity spirit':                            'CPG',
   "papa murphy's international":               'CPG',
-  'world market':                              'CPG',
   'rodan + fields':                            'CPG',
   // Defense
   'draper':                                    'Defense',
-  'sos international llc':                     'Defense',
   'janicki industries':                        'Defense',
   // Manufacturing
   "d'addario & company, inc.":                 'Manufacturing',
-  'gsfsgroup':                                 'Manufacturing',
-  'the tile shop':                             'Manufacturing',
   'camco manufacturing inc.':                  'Manufacturing',
   'warn industries':                           'Manufacturing',
-  'civic merchandising inc':                   'Manufacturing',
   'kamco supply corp.':                        'Manufacturing',
   'giesecke & devrient america, inc':          'Manufacturing',
-  'sb energy':                                 'Manufacturing',
   'aaf international':                         'Manufacturing',
   'core molding technologies':                 'Manufacturing',
   'piedmont plastics':                         'Manufacturing',
@@ -100,10 +92,7 @@ const UNDER1B_CATEGORIES: Record<string, string> = {
   'douglas dynamics, inc.':                    'Manufacturing',
   'onesource distributors':                    'Manufacturing',
   'cognex corporation':                        'Manufacturing',
-  'chemtreat, inc':                            'Manufacturing',
   'crane chempharma & energy':                 'Manufacturing',
-  'mustang cat':                               'Manufacturing',
-  'carter machinery':                          'Manufacturing',
   'kamax':                                     'Manufacturing',
   'oregon tool, inc':                          'Manufacturing',
   'infineum':                                  'Manufacturing',
@@ -113,13 +102,10 @@ const UNDER1B_CATEGORIES: Record<string, string> = {
   'lozier corporation':                        'Manufacturing',
   'trimedx':                                   'Healthcare / MedTech',
   'solar turbines':                            'Manufacturing',
-  'milton cat':                                'Manufacturing',
-  'milton catt':                               'Manufacturing',
   'parker lord':                               'Manufacturing',
   'adentra group':                             'Manufacturing',
   'pratt industries':                          'Manufacturing',
   'wabtec corporation':                        'Manufacturing',
-  'new york jewelers':                         'CPG',
 };
 
 // Sub-categories for Manufacturing tab companies
@@ -484,7 +470,6 @@ export default function Dashboard() {
     'endologix llc':                'Healthcare_MedTech - 1B+',
     'varsity spirit':               'CPG - 1B+',
     'stein mart, inc':              'CPG - 1B+',
-    'no more tears inc':            'CPG - 1B+',
     'aed essentials':               'Healthcare_MedTech - 1B+',
     'piedmont':                     'Healthcare_MedTech - 1B+',
     'ab inbev':                     'CPG - 1B+',
@@ -495,7 +480,7 @@ export default function Dashboard() {
     'heatcraft worldwide refrigeration': 'Under $1B (250M-1B)',
     'oregon tool, inc':             'Under $1B (250M-1B)',
     'parker hannifin':              'Defense Manufacturers - 1B+',
-    'parker-hannifin corp':         'Defense Manufacturers - 1B+',
+    'cargill':                      'Manufacturing - 1B+',
   };
 
   const dedupedData = useMemo(() => {
