@@ -375,6 +375,7 @@ function contactNameKey(n: string): string {
 const CONTACT_NAME_FIXES: Record<string, string> = {
   'john essen':    'John Bessen',
   'gariel grimes': 'Gabriel Grimes',
+  'gabriel g.':    'Gabriel Grimes',
 };
 
 // Typos in contact titles from SharePoint source data
@@ -383,18 +384,31 @@ const CONTACT_TITLE_FIXES: Record<string, string> = {
   'senior expert - environmental sustainaility':    'Senior Expert - Environmental Sustainability',
 };
 
-const UPPER_MGMT_KW = [
+const RELEVANT_TITLE_KW = [
   'vp', 'vice president', 'president', 'director', 'manager', 'chief',
-  'founder', 'owner', 'head of', 'partner', 'senior', 'sr.', 'sr ',
-  'principal', 'executive', 'ceo', 'cfo', 'cto', 'coo', 'cio', 'cmo',
-  'leader', 'lead', 'managing', 'superintendent', 'general manager',
+  'founder', 'owner', 'head of', 'partner', 'principal', 'executive',
+  'ceo', 'cfo', 'cto', 'coo', 'cio', 'cmo', 'managing',
+  'general manager', 'superintendent', 'engineer', 'buyer', 'analyst',
+  'consultant', 'specialist', 'coordinator', 'lead', 'leader', 'strategist',
+  'architect', 'scientist', 'researcher', 'planner', 'advisor', 'expert',
+  'officer', 'representative', 'account', 'procurement', 'supply chain',
+  'operations', 'product', 'project', 'program', 'business', 'commercial',
 ];
 
-function isUpperManagement(title: string): boolean {
+// Roles that are clearly not decision-makers or relevant contacts for TADA
+const IRRELEVANT_TITLE_KW = [
+  'technician', 'tech ', 'floor tech', 'nurse', 'rn ', 'staff nurse',
+  'paint ', 'janitor', 'custodian', 'security guard', 'receptionist',
+  'cashier', 'clerk', 'driver', 'delivery', 'assembler', 'operator',
+  'machine operator', 'laborer', 'forklift', 'housekeeper',
+];
+
+function isRelevantContact(title: string): boolean {
   if (!title?.trim()) return false;
   const t = title.toLowerCase();
-  if (t.includes('@')) return false; // email in title field = junk
-  return UPPER_MGMT_KW.some(w => t.includes(w));
+  if (t.includes('@')) return false;
+  if (IRRELEVANT_TITLE_KW.some(w => t.includes(w))) return false;
+  return RELEVANT_TITLE_KW.some(w => t.includes(w));
 }
 
 function domainFromUrl(url: string): string {
@@ -573,8 +587,7 @@ export default function Dashboard() {
       for (const p of c.contacts) {
         const rawName = CONTACT_NAME_FIXES[p.name.toLowerCase()] ?? p.name;
         const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
-        // Skip junk (email in name/title field)
-        if (rawName.includes('@') || rawTitle.includes('@')) continue;
+        if (!isRelevantContact(rawTitle)) continue;
         const key = contactNameKey(rawName);
         if (seen.has(key)) continue;
         seen.add(key);
@@ -586,6 +599,7 @@ export default function Dashboard() {
     const tabCompanyNames = new Set(sheetCompanies.map(c => normalizeName(c.name)));
     for (const p of individuals) {
       if (!tabCompanyNames.has(normalizeName(p.company))) continue;
+      if (!isRelevantContact(p.title)) continue;
       const fullName = `${p.firstName} ${p.lastName}`.trim();
       if (seen.has(contactNameKey(fullName))) continue;
       seen.add(contactNameKey(fullName));
