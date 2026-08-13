@@ -691,41 +691,84 @@ export default function Dashboard() {
   const currentTabLabel   = TABS.find(t => t.id === activeTab)!.label;
 
   const exportTab = () => {
-    if (!filtered.length) return;
-    const rows = filtered.map(c => ({
-      'Company Name': c.name, 'Revenue (Billions)': c.revenue,
-      Users: (c as any).users, Sessions: (c as any).sessions, Views: (c as any).views,
-    }));
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), currentTabLabel.substring(0, 31));
-    XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_${currentTabLabel}.xlsx`);
-    showToast(`Exported ${rows.length} companies`);
+    if (viewMode === 'contacts') {
+      if (!filteredContacts.length) return;
+      const rows = filteredContacts.map(c => ({
+        'Name': c.name, 'Title': c.title, 'Company': c.company,
+        'Email': c.email, 'LinkedIn': c.linkedin,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), currentTabLabel.substring(0, 31));
+      XLSX.writeFile(wb, `TADA_Contacts_${currentMonthLabel}_${currentTabLabel}.xlsx`);
+      showToast(`Exported ${rows.length} contact${rows.length === 1 ? '' : 's'}`);
+    } else {
+      if (!filtered.length) return;
+      const rows = filtered.map(c => ({
+        'Company Name': c.name, 'Revenue (Billions)': c.revenue,
+        Users: (c as any).users, Sessions: (c as any).sessions, Views: (c as any).views,
+      }));
+      XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), currentTabLabel.substring(0, 31));
+      XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_${currentTabLabel}.xlsx`);
+      showToast(`Exported ${rows.length} ${rows.length === 1 ? 'company' : 'companies'}`);
+    }
   };
 
   const exportAll = () => {
     try {
       const wb = XLSX.utils.book_new();
       let total = 0;
-      for (const tab of TABS) {
-        if (tab.id === 'all') continue;
-        const companies = (dedupedData[tab.sheet] ?? [])
-          .filter(c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
-          .map(addTotals);
-        if (!companies.length) continue;
-        const rows = companies.map(c => ({
-          'Company Name': c.name,
-          'Revenue (Billions)': c.revenue,
-          Users: (c as any).users,
-          Sessions: (c as any).sessions,
-          Views: (c as any).views,
-        }));
-        const sheetName = tab.label.replace(/[:\\/?*[\]]/g, '-').substring(0, 31);
-        XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), sheetName);
-        total += rows.length;
+      if (viewMode === 'contacts') {
+        for (const tab of TABS) {
+          if (tab.id === 'all') continue;
+          // Recompute contacts for this tab
+          const tabSheetCompanies = (dedupedData[tab.sheet] ?? [])
+            .filter(c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25);
+          const activeNames = new Set(tabSheetCompanies
+            .filter(c => selectedMonth === 'all' || (c.months[selectedMonth]?.users || c.months[selectedMonth]?.sessions))
+            .map(c => normalizeName(c.name)));
+          const seen = new Set<string>();
+          const rows: { Name: string; Title: string; Company: string; Email: string; LinkedIn: string }[] = [];
+          for (const c of tabSheetCompanies) {
+            for (const p of c.contacts) {
+              const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
+              const rawTitle = CONTACT_TITLE_FIXES[p.title?.toLowerCase?.()] ?? p.title;
+              if (!isRelevantContact(rawTitle)) continue;
+              const key = contactNameKey(rawName);
+              if (seen.has(key)) continue;
+              seen.add(key);
+              rows.push({ Name: rawName, Title: rawTitle, Company: c.name, Email: p.email, LinkedIn: p.linkedin });
+            }
+          }
+          if (!rows.length) continue;
+          const sheetName = tab.label.replace(/[:\\/?*[\]]/g, '-').substring(0, 31);
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), sheetName);
+          total += rows.length;
+        }
+        if (!total) { showToast('No contacts to export'); return; }
+        XLSX.writeFile(wb, `TADA_Contacts_${currentMonthLabel}_All.xlsx`);
+        showToast(`Exported ${total} contact${total === 1 ? '' : 's'} across all tabs`);
+      } else {
+        for (const tab of TABS) {
+          if (tab.id === 'all') continue;
+          const companies = (dedupedData[tab.sheet] ?? [])
+            .filter(c => tab.id === 'customers' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
+            .map(addTotals);
+          if (!companies.length) continue;
+          const rows = companies.map(c => ({
+            'Company Name': c.name,
+            'Revenue (Billions)': c.revenue,
+            Users: (c as any).users,
+            Sessions: (c as any).sessions,
+            Views: (c as any).views,
+          }));
+          const sheetName = tab.label.replace(/[:\\/?*[\]]/g, '-').substring(0, 31);
+          XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), sheetName);
+          total += rows.length;
+        }
+        if (!total) { showToast('No data to export — please wait for data to load'); return; }
+        XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_All.xlsx`);
+        showToast(`Exported ${total} ${total === 1 ? 'company' : 'companies'} across all tabs`);
       }
-      if (!total) { showToast('No data to export — please wait for data to load'); return; }
-      XLSX.writeFile(wb, `TADA_Visitors_${currentMonthLabel}_All.xlsx`);
-      showToast(`Exported ${total} companies across all tabs`);
     } catch (err) {
       console.error('Export All failed:', err);
       showToast(`Export failed: ${err instanceof Error ? err.message : String(err)}`);
