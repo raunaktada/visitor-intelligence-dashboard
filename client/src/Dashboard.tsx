@@ -540,12 +540,11 @@ export default function Dashboard() {
       }
     }
 
-    // Artisan individuals classified to this tab
+    // Artisan individuals: only include if their employer matches a company in this tab
+    const tabCompanyNames = new Set(sheetCompanies.map(c => normalizeName(c.name)));
     const seen = new Set(contacts.map(p => p.name.toLowerCase()));
     for (const p of individuals) {
-      const domain = domainFromUrl(p.website);
-      const tab = classifyDomain(p.company, domain);
-      if (tab !== activeTab) continue;
+      if (!tabCompanyNames.has(normalizeName(p.company))) continue;
       const fullName = `${p.firstName} ${p.lastName}`.trim().toLowerCase();
       if (seen.has(fullName)) continue;
       seen.add(fullName);
