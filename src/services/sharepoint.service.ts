@@ -106,6 +106,7 @@ const EXCLUDED_COMPANIES = new Set([
   'evolent health',
   // Defense
   'nasa',
+  'national aeronautics and space administration',
   // CPG non-fit
   'crate and barrel',
   'crate & barrel',
