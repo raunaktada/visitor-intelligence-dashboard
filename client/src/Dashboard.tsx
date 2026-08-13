@@ -372,10 +372,11 @@ function contactNameKey(n: string): string {
 }
 
 // Typos in contact names from SharePoint source data
+// Keys must be in contactNameKey() format (lowercased, punctuation stripped)
 const CONTACT_NAME_FIXES: Record<string, string> = {
   'john essen':    'John Bessen',
   'gariel grimes': 'Gabriel Grimes',
-  'gabriel g.':    'Gabriel Grimes',
+  'gabriel g':     'Gabriel Grimes',
 };
 
 // Typos in contact titles from SharePoint source data
@@ -587,7 +588,7 @@ export default function Dashboard() {
     // SharePoint contacts from current tab — dedup, fix typos, filter seniority
     for (const c of sheetCompanies) {
       for (const p of c.contacts) {
-        const rawName = CONTACT_NAME_FIXES[p.name.toLowerCase()] ?? p.name;
+        const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
         const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
         if (!isRelevantContact(rawTitle)) continue;
         const key = contactNameKey(rawName);
@@ -602,7 +603,8 @@ export default function Dashboard() {
     for (const p of individuals) {
       if (!tabCompanyNames.has(normalizeName(p.company))) continue;
       if (!isRelevantContact(p.title)) continue;
-      const fullName = `${p.firstName} ${p.lastName}`.trim();
+      const rawFullName = `${p.firstName} ${p.lastName}`.trim();
+      const fullName = CONTACT_NAME_FIXES[contactNameKey(rawFullName)] ?? rawFullName;
       if (seen.has(contactNameKey(fullName))) continue;
       seen.add(contactNameKey(fullName));
       contacts.push({
