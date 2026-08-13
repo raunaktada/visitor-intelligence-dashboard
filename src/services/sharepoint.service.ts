@@ -77,6 +77,9 @@ const REVENUE_OVERRIDES: Record<string, string> = {
   'regal rexnord corporation':    '$5.8',
   'varsity spirit':               '$0.4',
   'alphakor group':               '$0.05',
+  'coorstek, inc.':               '$0.82',
+  'heatcraft worldwide refrigeration': '$0.34',
+  'oregon tool, inc':             '$0.87',
   'piedmont':                     '$6.5',
 };
 
