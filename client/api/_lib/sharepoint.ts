@@ -108,6 +108,20 @@ const EXCLUDED_COMPANIES = new Set([
   // Healthcare IT & Services
   'change healthcare',
   'evolent health',
+  'icon plc',
+  'parexel international',
+  'siemens healthineers',
+  'davita inc',
+  'davita',
+  'fresenius medical care',
+  'oak street health',
+  'radiology partners',
+  'sca health',
+  'bioplus specialty pharmacy',
+  'onco360 oncology pharmacy',
+  // Behavioral Health & Rehabilitation
+  'encompass health corporation',
+  'encompass health',
   // Defense
   'nasa',
   'national aeronautics and space administration',
