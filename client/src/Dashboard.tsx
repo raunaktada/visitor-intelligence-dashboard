@@ -581,12 +581,25 @@ export default function Dashboard() {
   }, [companiesWithTotals, search]);
 
   // Contacts view: SharePoint contacts + Artisan individuals, classified to active tab
+  // Only includes companies that had activity in the selected month
   const tabContacts = useMemo(() => {
+    // Build set of company names that were active in the selected month
+    const activeCompanyNames = new Set<string>();
+    for (const c of sheetCompanies) {
+      const active = selectedMonth === 'all'
+        ? Object.keys(c.months).length > 0
+        : !!(c.months[selectedMonth]?.users || c.months[selectedMonth]?.sessions);
+      if (active) {
+        activeCompanyNames.add(normalizeName(c.name));
+      }
+    }
+
     const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string }[] = [];
     const seen = new Set<string>();
 
-    // SharePoint contacts from current tab — dedup, fix typos, filter seniority
+    // SharePoint contacts — dedup, fix typos, month-filter by company activity
     for (const c of sheetCompanies) {
+      if (!activeCompanyNames.has(normalizeName(c.name))) continue;
       for (const p of c.contacts) {
         const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
         const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
@@ -598,10 +611,9 @@ export default function Dashboard() {
       }
     }
 
-    // Artisan individuals: only include if their employer matches a company in this tab
-    const tabCompanyNames = new Set(sheetCompanies.map(c => normalizeName(c.name)));
+    // Artisan individuals: only if employer matches an active company in this tab
     for (const p of individuals) {
-      if (!tabCompanyNames.has(normalizeName(p.company))) continue;
+      if (!activeCompanyNames.has(normalizeName(p.company))) continue;
       if (!isRelevantContact(p.title)) continue;
       const rawFullName = `${p.firstName} ${p.lastName}`.trim();
       const fullName = CONTACT_NAME_FIXES[contactNameKey(rawFullName)] ?? rawFullName;
@@ -613,8 +625,10 @@ export default function Dashboard() {
       });
     }
 
+    // Sort by company name so contacts from the same company are grouped together
+    contacts.sort((a, b) => a.company.localeCompare(b.company));
     return contacts;
-  }, [sheetCompanies, individuals, activeTab]);
+  }, [sheetCompanies, individuals, activeTab, selectedMonth]);
 
   const filteredContacts = useMemo(() => {
     if (!search) return tabContacts;
