@@ -363,6 +363,40 @@ function classifyDomain(name: string, domain: string): TabId {
   return 'manufacturing';
 }
 
+// Strip credentials/suffixes from names for dedup (e.g. "John Smith, CPA" → "john smith")
+function contactNameKey(n: string): string {
+  return n.toLowerCase()
+    .replace(/,?\s*(cpa|ctp|mba|md|ms|phd|pe|pmp|jr|sr|ii|iii|iv|cfa|facr|jd|ctp|mpa)\b.*/i, '')
+    .replace(/[^a-z0-9 ]/g, '')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Typos in contact names from SharePoint source data
+const CONTACT_NAME_FIXES: Record<string, string> = {
+  'john essen':    'John Bessen',
+  'gariel grimes': 'Gabriel Grimes',
+};
+
+// Typos in contact titles from SharePoint source data
+const CONTACT_TITLE_FIXES: Record<string, string> = {
+  'senior uyer':                                    'Senior Buyer',
+  'senior expert - environmental sustainaility':    'Senior Expert - Environmental Sustainability',
+};
+
+const UPPER_MGMT_KW = [
+  'vp', 'vice president', 'president', 'director', 'manager', 'chief',
+  'founder', 'owner', 'head of', 'partner', 'senior', 'sr.', 'sr ',
+  'principal', 'executive', 'ceo', 'cfo', 'cto', 'coo', 'cio', 'cmo',
+  'leader', 'lead', 'managing', 'superintendent', 'general manager',
+];
+
+function isUpperManagement(title: string): boolean {
+  if (!title?.trim()) return false;
+  const t = title.toLowerCase();
+  if (t.includes('@')) return false; // email in title field = junk
+  return UPPER_MGMT_KW.some(w => t.includes(w));
+}
+
 function domainFromUrl(url: string): string {
   try { return new URL(url.startsWith('http') ? url : `https://${url}`).hostname.replace(/^www\./, '').toLowerCase(); }
   catch { return url.toLowerCase().replace(/^www\./, ''); }
@@ -532,26 +566,33 @@ export default function Dashboard() {
   // Contacts view: SharePoint contacts + Artisan individuals, classified to active tab
   const tabContacts = useMemo(() => {
     const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string }[] = [];
+    const seen = new Set<string>();
 
-    // SharePoint contacts from current tab
+    // SharePoint contacts from current tab — dedup, fix typos, filter seniority
     for (const c of sheetCompanies) {
       for (const p of c.contacts) {
-        contacts.push({ ...p, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint' });
+        const rawName = CONTACT_NAME_FIXES[p.name.toLowerCase()] ?? p.name;
+        const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
+        // Skip junk (email in name/title field)
+        if (rawName.includes('@') || rawTitle.includes('@')) continue;
+        if (!isUpperManagement(rawTitle)) continue;
+        const key = contactNameKey(rawName);
+        if (seen.has(key)) continue;
+        seen.add(key);
+        contacts.push({ ...p, name: rawName, title: rawTitle, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint' });
       }
     }
 
     // Artisan individuals: only include if their employer matches a company in this tab
     const tabCompanyNames = new Set(sheetCompanies.map(c => normalizeName(c.name)));
-    const nameKey = (n: string) => n.toLowerCase().replace(/[^a-z0-9 ]/g, '').replace(/\s+/g, ' ').trim();
-    const seen = new Set(contacts.map(p => nameKey(p.name)));
     for (const p of individuals) {
       if (!tabCompanyNames.has(normalizeName(p.company))) continue;
+      if (!isUpperManagement(p.title)) continue;
       const fullName = `${p.firstName} ${p.lastName}`.trim();
-      if (seen.has(nameKey(fullName))) continue;
-      seen.add(nameKey(fullName));
+      if (seen.has(contactNameKey(fullName))) continue;
+      seen.add(contactNameKey(fullName));
       contacts.push({
-        name: `${p.firstName} ${p.lastName}`.trim(),
-        title: p.title, company: p.company, email: p.email,
+        name: fullName, title: p.title, company: p.company, email: p.email,
         linkedin: p.linkedin, pageViewed: String(p.pageViews || ''), source: 'artisan',
       });
     }
