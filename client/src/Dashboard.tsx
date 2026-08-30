@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import './Dashboard.css';
 
-const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'];
+const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026'];
 
 type TabId = 'all' | 'customers' | 'defense' | 'datacenter' | 'manufacturing' | 'healthcare' | 'cpg' | 'under1b';
 
@@ -384,19 +384,24 @@ const RELEVANT_TITLE_KW = [
   'vp', 'vice president', 'president', 'director', 'manager', 'chief',
   'founder', 'owner', 'head of', 'partner', 'principal', 'executive',
   'ceo', 'cfo', 'cto', 'coo', 'cio', 'cmo', 'managing',
-  'general manager', 'superintendent', 'engineer', 'buyer', 'analyst',
+  'general manager', 'superintendent', 'buyer', 'analyst',
   'consultant', 'specialist', 'coordinator', 'lead', 'leader', 'strategist',
   'architect', 'scientist', 'researcher', 'planner', 'advisor', 'expert',
   'officer', 'representative', 'account', 'procurement', 'supply chain',
   'operations', 'product', 'project', 'program', 'business', 'commercial',
 ];
 
-// Roles that are clearly not decision-makers or relevant contacts for TADA
+// Roles that are clearly not decision-makers or relevant contacts for TADA.
+// Checked before RELEVANT_TITLE_KW, so these win even if a title also contains
+// a relevant word (e.g. "Neurology Account Manager" still contains "manager").
+// Per Prashant: trim these out; list will grow over time as more show up.
 const IRRELEVANT_TITLE_KW = [
   'technician', 'tech ', 'floor tech', 'nurse', 'rn ', 'staff nurse',
   'paint ', 'janitor', 'custodian', 'security guard', 'receptionist',
   'cashier', 'clerk', 'driver', 'delivery', 'assembler', 'operator',
   'machine operator', 'laborer', 'forklift', 'housekeeper',
+  'engineer', 'corporate audit', 'records examiner', 'on-site specialist',
+  'on site specialist', 'neurology account manager',
 ];
 
 function isRelevantContact(title: string): boolean {
@@ -429,6 +434,91 @@ function parseIndividuals(text: string): Individual[] {
   });
 }
 
+type FilterOp = 'gt' | 'lt' | 'between';
+type FilterableCol = 'revenue' | 'users' | 'sessions' | 'views';
+interface ColumnFilterState { op: FilterOp; value: string; value2: string; }
+
+function getColumnValue(c: any, col: FilterableCol): number {
+  if (col === 'revenue') return revenueInBillions(cleanRevenue(c.revenue || ''));
+  return c[col] ?? 0;
+}
+
+function passesColumnFilter(value: number, f: ColumnFilterState | undefined): boolean {
+  if (!f) return true;
+  const v1 = parseFloat(f.value);
+  const v2 = parseFloat(f.value2);
+  if (f.op === 'gt') return isNaN(v1) ? true : value > v1;
+  if (f.op === 'lt') return isNaN(v1) ? true : value < v1;
+  // between
+  const lo = isNaN(v1) ? -Infinity : v1;
+  const hi = isNaN(v2) ? Infinity : v2;
+  if (lo === -Infinity && hi === Infinity) return true;
+  return value >= lo && value <= hi;
+}
+
+// Small "funnel" popover for numeric column filtering (>, <, between). Self-contained:
+// manages its own open/edit state, only reports committed filters up via onChange.
+function ColumnFilterPopover({ label, filter, onChange }: {
+  label: string;
+  filter?: ColumnFilterState;
+  onChange: (f: ColumnFilterState | undefined) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [op, setOp] = useState<FilterOp>(filter?.op ?? 'gt');
+  const [value, setValue] = useState(filter?.value ?? '');
+  const [value2, setValue2] = useState(filter?.value2 ?? '');
+
+  const openPanel = () => {
+    setOp(filter?.op ?? 'gt');
+    setValue(filter?.value ?? '');
+    setValue2(filter?.value2 ?? '');
+    setOpen(o => !o);
+  };
+  const apply = () => {
+    if (!value.trim() && !value2.trim()) { onChange(undefined); setOpen(false); return; }
+    onChange({ op, value, value2 });
+    setOpen(false);
+  };
+  const clear = () => {
+    setOp('gt'); setValue(''); setValue2('');
+    onChange(undefined);
+    setOpen(false);
+  };
+
+  return (
+    <span className="col-filter">
+      <button type="button" className={`col-filter-btn${filter ? ' active' : ''}`}
+        onClick={openPanel} aria-label={`Filter ${label}`}>▾</button>
+      {open && (
+        <>
+          <div className="col-filter-backdrop" onClick={() => setOpen(false)} />
+          <div className="col-filter-panel" onClick={e => e.stopPropagation()}>
+            <div className="col-filter-ops">
+              <button type="button" className={op === 'gt' ? 'active' : ''} onClick={() => setOp('gt')}>&gt;</button>
+              <button type="button" className={op === 'lt' ? 'active' : ''} onClick={() => setOp('lt')}>&lt;</button>
+              <button type="button" className={op === 'between' ? 'active' : ''} onClick={() => setOp('between')}>Between</button>
+            </div>
+            {op === 'between' ? (
+              <div className="col-filter-inputs">
+                <input type="number" placeholder="Min" value={value} onChange={e => setValue(e.target.value)} />
+                <input type="number" placeholder="Max" value={value2} onChange={e => setValue2(e.target.value)} />
+              </div>
+            ) : (
+              <div className="col-filter-inputs">
+                <input type="number" placeholder="Value" value={value} onChange={e => setValue(e.target.value)} autoFocus />
+              </div>
+            )}
+            <div className="col-filter-actions">
+              <button type="button" className="col-filter-clear" onClick={clear}>Clear</button>
+              <button type="button" className="col-filter-apply" onClick={apply}>Apply</button>
+            </div>
+          </div>
+        </>
+      )}
+    </span>
+  );
+}
+
 export default function Dashboard() {
   const [allData,       setAllData]       = useState<Record<string, Company[]>>({});
   const [individuals,   setIndividuals]   = useState<Individual[]>([]);
@@ -439,6 +529,7 @@ export default function Dashboard() {
   const [viewMode,      setViewMode]      = useState<'companies' | 'contacts'>('companies');
   const [search,        setSearch]        = useState('');
   const [toast,         setToast]         = useState('');
+  const [columnFilters, setColumnFilters] = useState<Partial<Record<FilterableCol, ColumnFilterState>>>({});
 
   const showToast = useCallback((msg: string) => {
     setToast(msg); setTimeout(() => setToast(''), 3000);
@@ -563,19 +654,29 @@ export default function Dashboard() {
       .map(addTotals)
       .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
       .sort((a, b) => {
-        const ra = parseFloat((a.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
-        const rb = parseFloat((b.revenue || '0').replace(/[^0-9.]/g, '')) || 0;
-        return rb - ra;
+        const au = (a as any).users ?? 0, bu = (b as any).users ?? 0;
+        if (bu !== au) return bu - au;
+        const asess = (a as any).sessions ?? 0, bsess = (b as any).sessions ?? 0;
+        if (bsess !== asess) return bsess - asess;
+        const av = (a as any).views ?? 0, bv = (b as any).views ?? 0;
+        return bv - av;
       });
   }, [sheetCompanies, allData, selectedMonth, activeTab, addTotals]);
 
   const filtered = useMemo(() => {
-    if (!search) return companiesWithTotals;
-    const q = search.toLowerCase();
-    return companiesWithTotals.filter(c =>
-      c.name.toLowerCase().includes(q) || (c.category ?? '').toLowerCase().includes(q)
-    );
-  }, [companiesWithTotals, search]);
+    let list = companiesWithTotals;
+    if (search) {
+      const q = search.toLowerCase();
+      list = list.filter(c =>
+        c.name.toLowerCase().includes(q) || (c.category ?? '').toLowerCase().includes(q)
+      );
+    }
+    const activeCols = (Object.keys(columnFilters) as FilterableCol[]).filter(k => columnFilters[k]);
+    if (activeCols.length > 0) {
+      list = list.filter(c => activeCols.every(col => passesColumnFilter(getColumnValue(c, col), columnFilters[col])));
+    }
+    return list;
+  }, [companiesWithTotals, search, columnFilters]);
 
   // Contacts view: SharePoint contacts + Artisan individuals, classified to active tab
   // Only includes companies that had activity in the selected month
@@ -864,11 +965,35 @@ export default function Dashboard() {
             <thead>
               <tr>
                 <th>Company</th>
-                <th>Revenue (Billions)</th>
+                <th>
+                  <div className="th-content">
+                    <span>Revenue (Billions)</span>
+                    <ColumnFilterPopover label="Revenue" filter={columnFilters.revenue}
+                      onChange={f => setColumnFilters(prev => ({ ...prev, revenue: f }))} />
+                  </div>
+                </th>
                 {showCategory && <th>Category</th>}
-                <th className="num-col">Users</th>
-                <th className="num-col">Sessions</th>
-                <th className="num-col">Views</th>
+                <th className="num-col">
+                  <div className="th-content">
+                    <span>Users</span>
+                    <ColumnFilterPopover label="Users" filter={columnFilters.users}
+                      onChange={f => setColumnFilters(prev => ({ ...prev, users: f }))} />
+                  </div>
+                </th>
+                <th className="num-col">
+                  <div className="th-content">
+                    <span>Sessions</span>
+                    <ColumnFilterPopover label="Sessions" filter={columnFilters.sessions}
+                      onChange={f => setColumnFilters(prev => ({ ...prev, sessions: f }))} />
+                  </div>
+                </th>
+                <th className="num-col">
+                  <div className="th-content">
+                    <span>Views</span>
+                    <ColumnFilterPopover label="Views" filter={columnFilters.views}
+                      onChange={f => setColumnFilters(prev => ({ ...prev, views: f }))} />
+                  </div>
+                </th>
               </tr>
             </thead>
             <tbody>

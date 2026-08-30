@@ -217,7 +217,7 @@ export interface Company {
   contacts: Contact[];
 }
 
-const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026'];
+const MONTH_KEYS = ['Feb 2026', 'Mar 2026', 'Apr 2026', 'May 2026', 'Jun 2026', 'Jul 2026', 'Aug 2026'];
 
 async function getRawRows(driveId: string, fileId: string, sheetName: string): Promise<unknown[][]> {
   const client = buildClient();

@@ -363,6 +363,50 @@ body {
 }
 .visitors-table th.sortable:hover { color: var(--text); }
 
+/* ─── Column filters ─────────────────────────────────────────────────── */
+.th-content { display: flex; align-items: center; gap: 4px; }
+.visitors-table th.num-col .th-content { justify-content: flex-end; }
+
+.col-filter { position: relative; display: inline-flex; }
+.col-filter-btn {
+  background: none; border: none; color: var(--muted); cursor: pointer;
+  font-size: 10px; padding: 2px 4px; border-radius: 4px; line-height: 1;
+}
+.col-filter-btn:hover { color: var(--text); background: var(--surface); }
+.col-filter-btn.active { color: var(--accent); }
+
+.col-filter-backdrop { position: fixed; inset: 0; z-index: 20; }
+
+.col-filter-panel {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 10px; width: 190px; z-index: 21;
+  text-transform: none; letter-spacing: normal; font-weight: 400;
+}
+
+.col-filter-ops { display: flex; gap: 4px; margin-bottom: 8px; }
+.col-filter-ops button {
+  flex: 1; background: var(--surface); border: 1px solid var(--border);
+  color: var(--muted); border-radius: 6px; padding: 4px 0; font-size: 12px; cursor: pointer;
+}
+.col-filter-ops button.active { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+
+.col-filter-inputs { display: flex; gap: 6px; margin-bottom: 8px; }
+.col-filter-inputs input {
+  width: 100%; background: var(--surface); border: 1px solid var(--border);
+  color: var(--text); border-radius: 6px; padding: 5px 7px; font-size: 12px;
+}
+.col-filter-inputs input:focus { outline: none; border-color: var(--accent); }
+
+.col-filter-actions { display: flex; justify-content: space-between; gap: 6px; }
+.col-filter-actions button {
+  flex: 1; border-radius: 6px; padding: 5px 0; font-size: 12px; cursor: pointer; border: 1px solid var(--border);
+}
+.col-filter-clear { background: var(--surface); color: var(--muted); }
+.col-filter-clear:hover { color: var(--text); }
+.col-filter-apply { background: var(--accent); color: var(--bg); border-color: var(--accent); font-weight: 600; }
+
 .visitors-table td {
   padding: 12px 14px;
   border-bottom: 1px solid var(--border);
