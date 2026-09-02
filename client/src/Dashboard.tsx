@@ -710,10 +710,11 @@ export default function Dashboard() {
       }
     }
 
-    // Artisan individuals: only if employer matches an active company in this tab
-    // and the individual visited in the selected month
+    // Artisan individuals: for a specific month, show anyone who visited that month
+    // regardless of whether their employer is in the dashboard company list.
+    // For "all time", require the employer to be in the current tab's active companies.
     for (const p of individuals) {
-      if (!activeCompanyNames.has(normalizeName(p.company))) continue;
+      if (selectedMonth === 'all' && !activeCompanyNames.has(normalizeName(p.company))) continue;
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
       if (!isRelevantContact(p.title)) continue;
       const rawFullName = `${p.firstName} ${p.lastName}`.trim();
