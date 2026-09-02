@@ -359,6 +359,36 @@ function addMissingCompanies(companies: Company[], oldContacts: Map<string, { di
   return [...companies, ...extras];
 }
 
+// Aug 2026 visit data — injected directly until SharePoint is updated manually
+const AUG_2026_PATCH: Record<string, { sheet: string; revenue?: string; aug: MonthData }> = {
+  // Existing companies — just add Aug visit counts
+  'Eaton':                    { sheet: 'Manufacturing - 1B+',      aug: { users: 2, sessions: 3, views: 5 } },
+  'General Mills Inc':        { sheet: 'CPG - 1B+',               aug: { users: 2, sessions: 2, views: 2 } },
+  'Nestle':                   { sheet: 'CPG - 1B+',               aug: { users: 1, sessions: 1, views: 1 } },
+  "Macy's":                   { sheet: 'CPG - 1B+',               aug: { users: 1, sessions: 1, views: 2 } },
+  'Target Brands, Inc':       { sheet: 'CPG - 1B+',               aug: { users: 1, sessions: 1, views: 1 } },
+  'Cargill':                  { sheet: 'Manufacturing - 1B+',      aug: { users: 1, sessions: 1, views: 1 } },
+  'Southeastern Grocers':     { sheet: 'CPG - 1B+',               aug: { users: 1, sessions: 1, views: 1 } },
+  // New companies — added with revenue for correct tab placement
+  'OhioHealth':               { sheet: 'Healthcare_MedTech - 1B+', revenue: '$5.0',  aug: { users: 3, sessions: 3, views: 3 } },
+  'AmeriGas Propane, Inc.':   { sheet: 'Manufacturing - 1B+',      revenue: '$3.7',  aug: { users: 3, sessions: 3, views: 3 } },
+  'Merck & Co., Inc':         { sheet: 'Healthcare_MedTech - 1B+', revenue: '$60.1', aug: { users: 1, sessions: 1, views: 1 } },
+  'Boston Scientific Corporation': { sheet: 'Healthcare_MedTech - 1B+', revenue: '$14.2', aug: { users: 1, sessions: 1, views: 1 } },
+  'LabCorp':                  { sheet: 'Healthcare_MedTech - 1B+', revenue: '$12.2', aug: { users: 1, sessions: 1, views: 2 } },
+  'Kaiser Permanente':        { sheet: 'Healthcare_MedTech - 1B+', revenue: '$100.0',aug: { users: 1, sessions: 1, views: 1 } },
+  'LifeBridge Health':        { sheet: 'Healthcare_MedTech - 1B+', revenue: '$2.5',  aug: { users: 1, sessions: 1, views: 1 } },
+  'Aspen Dental Management':  { sheet: 'Healthcare_MedTech - 1B+', revenue: '$4.0',  aug: { users: 1, sessions: 1, views: 3 } },
+  'Rockwell Automation':      { sheet: 'Manufacturing - 1B+',      revenue: '$8.3',  aug: { users: 1, sessions: 1, views: 1 } },
+  'Vishay Intertechnology':   { sheet: 'Manufacturing - 1B+',      revenue: '$3.5',  aug: { users: 1, sessions: 1, views: 1 } },
+  'First Solar':              { sheet: 'Manufacturing - 1B+',      revenue: '$3.3',  aug: { users: 1, sessions: 1, views: 1 } },
+  'Taylor Corporation':       { sheet: 'Manufacturing - 1B+',      revenue: '$2.0',  aug: { users: 1, sessions: 1, views: 1 } },
+  'FXI':                      { sheet: 'Manufacturing - 1B+',      revenue: '$1.2',  aug: { users: 1, sessions: 1, views: 1 } },
+  'Tory Burch':               { sheet: 'CPG - 1B+',               revenue: '$1.5',  aug: { users: 1, sessions: 1, views: 1 } },
+  'Kellwood Company':         { sheet: 'CPG - 1B+',               revenue: '$1.0',  aug: { users: 1, sessions: 1, views: 1 } },
+  'Y-12 National Security Complex': { sheet: 'Defense Manufacturers - 1B+', revenue: '$2.5', aug: { users: 1, sessions: 2, views: 2 } },
+  'Zoox':                     { sheet: 'Data Center Mfg - 1B+',    revenue: '$1.0',  aug: { users: 1, sessions: 1, views: 2 } },
+};
+
 export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
   // Fetch new file + old file in parallel
   const oldSheetNames = Object.keys(OLD_TO_NEW);
@@ -413,5 +443,17 @@ export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
       return override ? { ...c, revenue: override } : c;
     });
   }
+
+  // Merge Aug 2026 patch into result
+  for (const [name, { sheet, revenue, aug }] of Object.entries(AUG_2026_PATCH)) {
+    if (!result[sheet]) continue;
+    const existing = result[sheet].find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.months['Aug 2026'] = aug;
+    } else {
+      result[sheet].push({ name, revenue: revenue ?? '', months: { 'Aug 2026': aug }, contacts: [] });
+    }
+  }
+
   return result;
 }
