@@ -683,7 +683,10 @@ export default function Dashboard() {
   const tabContacts = useMemo(() => {
     // Build set of company names that were active in the selected month
     const activeCompanyNames = new Set<string>();
+    // Build set of ALL companies in this tab (regardless of month activity)
+    const tabCompanyNames = new Set<string>();
     for (const c of sheetCompanies) {
+      tabCompanyNames.add(normalizeName(c.name));
       const active = selectedMonth === 'all'
         ? Object.keys(c.months).length > 0
         : !!(c.months[selectedMonth]?.users || c.months[selectedMonth]?.sessions);
@@ -710,14 +713,26 @@ export default function Dashboard() {
       }
     }
 
-    // Artisan individuals: for a specific month, show anyone who visited that month
-    // regardless of whether their employer is in the dashboard company list.
-    // For "all time", require the employer to be in the current tab's active companies.
+    // All known company names across every tab (for routing unknown-company contacts to "All")
+    const allKnownCompanyNames = new Set<string>();
+    for (const companies of Object.values(allData)) {
+      for (const c of companies) allKnownCompanyNames.add(normalizeName(c.name));
+    }
+
+    // Artisan individuals: filter by month, then route to the correct tab.
+    // Known company → show only in that company's tab (or All Companies).
+    // Unknown company → show only in "All Companies" tab.
     for (const p of individuals) {
       if (!p.company.trim() || p.company === '—') continue;
       if (p.company.toLowerCase() === 'tada') continue;
       if (selectedMonth === 'all' && !activeCompanyNames.has(normalizeName(p.company))) continue;
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
+      if (selectedMonth !== 'all' && activeTab !== 'all') {
+        const knownInThisTab = tabCompanyNames.has(normalizeName(p.company));
+        const knownInAnyTab = allKnownCompanyNames.has(normalizeName(p.company));
+        if (!knownInThisTab && knownInAnyTab) continue; // belongs to a different tab
+        if (!knownInThisTab && !knownInAnyTab) continue; // unknown — only show in All Companies
+      }
       if (!isRelevantContact(p.title)) continue;
       const rawFullName = `${p.firstName} ${p.lastName}`.trim();
       const fullName = CONTACT_NAME_FIXES[contactNameKey(rawFullName)] ?? rawFullName;
@@ -732,7 +747,7 @@ export default function Dashboard() {
     // Sort by company name so contacts from the same company are grouped together
     contacts.sort((a, b) => a.company.localeCompare(b.company));
     return contacts;
-  }, [sheetCompanies, individuals, activeTab, selectedMonth]);
+  }, [sheetCompanies, allData, individuals, activeTab, selectedMonth]);
 
   const filteredContacts = useMemo(() => {
     if (!search) return tabContacts;
