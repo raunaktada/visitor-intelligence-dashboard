@@ -714,7 +714,7 @@ export default function Dashboard() {
     // regardless of whether their employer is in the dashboard company list.
     // For "all time", require the employer to be in the current tab's active companies.
     for (const p of individuals) {
-      if (!p.company.trim()) continue;
+      if (!p.company.trim() || p.company === '—') continue;
       if (p.company.toLowerCase() === 'tada') continue;
       if (selectedMonth === 'all' && !activeCompanyNames.has(normalizeName(p.company))) continue;
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
