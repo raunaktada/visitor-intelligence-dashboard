@@ -725,9 +725,8 @@ export default function Dashboard() {
     for (const p of individuals) {
       if (!p.company.trim() || p.company === '—') continue;
       if (p.company.toLowerCase() === 'tada') continue;
-      if (selectedMonth === 'all' && !activeCompanyNames.has(normalizeName(p.company))) continue;
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
-      if (selectedMonth !== 'all' && activeTab !== 'all') {
+      if (activeTab !== 'all') {
         const knownInThisTab = tabCompanyNames.has(normalizeName(p.company));
         const knownInAnyTab = allKnownCompanyNames.has(normalizeName(p.company));
         if (!knownInThisTab && knownInAnyTab) continue; // belongs to a different tab
