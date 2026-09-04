@@ -368,6 +368,13 @@ function contactNameKey(n: string): string {
 
 // Typos in contact names from SharePoint source data
 // Keys must be in contactNameKey() format (lowercased, punctuation stripped)
+const EXCLUDED_CONTACT_COMPANIES = new Set([
+  'accenture', 'barclays', 'charles schwab', 'deloitte', 'merrill lynch',
+  'northwestern mutual', 'wells fargo advisors', 'ameriprise financial services, inc.',
+  'qlik', 'sap', 'pendo.io', 'paylocity', 'insperity', 'sedgwick', 'trinet',
+  'transplace', 'fedex logistics', 'echo global logistics', 'norfolk southern railroad',
+]);
+
 const CONTACT_NAME_FIXES: Record<string, string> = {
   'john essen':    'John Bessen',
   'gariel grimes': 'Gabriel Grimes',
@@ -725,6 +732,7 @@ export default function Dashboard() {
     for (const p of individuals) {
       if (!p.company.trim() || p.company === '—') continue;
       if (p.company.toLowerCase() === 'tada') continue;
+      if (EXCLUDED_CONTACT_COMPANIES.has(p.company.toLowerCase())) continue;
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
       if (activeTab !== 'all') {
         const knownInThisTab = tabCompanyNames.has(normalizeName(p.company));
