@@ -387,6 +387,16 @@ const AUG_2026_PATCH: Record<string, { sheet: string; revenue?: string; aug: Mon
   'Kellwood Company':         { sheet: 'CPG - 1B+',               revenue: '$1.0',  aug: { users: 1, sessions: 1, views: 1 } },
   'Y-12 National Security Complex': { sheet: 'Defense Manufacturers - 1B+', revenue: '$2.5', aug: { users: 1, sessions: 2, views: 2 } },
   'Zoox':                     { sheet: 'Data Center Mfg - 1B+',    revenue: '$1.0',  aug: { users: 1, sessions: 1, views: 2 } },
+  // Added from Artisan contacts — new companies
+  'Ford Motor Company':                    { sheet: 'Manufacturing - 1B+',      revenue: '$185.0', aug: { users: 1, sessions: 1, views: 3 } },
+  'John Deere':                            { sheet: 'Manufacturing - 1B+',      revenue: '$52.0',  aug: { users: 1, sessions: 1, views: 2 } },
+  'Pactiv Evergreen Inc.':                 { sheet: 'Manufacturing - 1B+',      revenue: '$5.8',   aug: { users: 1, sessions: 1, views: 2 } },
+  'Bridgestone Americas Inc.':             { sheet: 'Manufacturing - 1B+',      revenue: '$3.0',   aug: { users: 1, sessions: 1, views: 2 } },
+  'Zeiss Industrial Quality Solutions':    { sheet: 'Manufacturing - 1B+',      revenue: '$8.0',   aug: { users: 1, sessions: 1, views: 2 } },
+  'Wipro':                                 { sheet: 'CPG - 1B+',               revenue: '$11.0',  aug: { users: 1, sessions: 1, views: 2 } },
+  'NorthShore University HealthSystem':    { sheet: 'Healthcare_MedTech - 1B+', revenue: '$3.0',   aug: { users: 1, sessions: 1, views: 4 } },
+  "St. Luke's University Health Network":  { sheet: 'Healthcare_MedTech - 1B+', revenue: '$2.5',   aug: { users: 1, sessions: 1, views: 2 } },
+  'Park Nicollet Health Services':         { sheet: 'Healthcare_MedTech - 1B+', revenue: '$1.5',   aug: { users: 1, sessions: 1, views: 3 } },
 };
 
 export async function getAllSheetsData(): Promise<Record<string, Company[]>> {

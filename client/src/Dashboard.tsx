@@ -373,6 +373,7 @@ const EXCLUDED_CONTACT_COMPANIES = new Set([
   'northwestern mutual', 'wells fargo advisors', 'ameriprise financial services, inc.',
   'qlik', 'sap', 'pendo.io', 'paylocity', 'insperity', 'sedgwick', 'trinet',
   'transplace', 'fedex logistics', 'echo global logistics', 'norfolk southern railroad',
+  'tpg', 'wisdomtree asset management', 'xfinity', 'uniti group inc.',
 ]);
 
 const CONTACT_NAME_FIXES: Record<string, string> = {
