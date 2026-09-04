@@ -656,19 +656,63 @@ export default function Dashboard() {
         : sheetCompanies.filter(c => revenueInBillions(cleanRevenue(c.revenue)) >= 1);
     }
 
-    return base
+    let result = base
       .filter(c => activeTab === 'customers' || c.category === 'Customers & Partners' || revenueInBillions(cleanRevenue(c.revenue)) >= 0.25)
       .map(addTotals)
-      .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0)
-      .sort((a, b) => {
-        const au = (a as any).users ?? 0, bu = (b as any).users ?? 0;
-        if (bu !== au) return bu - au;
-        const asess = (a as any).sessions ?? 0, bsess = (b as any).sessions ?? 0;
-        if (bsess !== asess) return bsess - asess;
-        const av = (a as any).views ?? 0, bv = (b as any).views ?? 0;
-        return bv - av;
-      });
-  }, [sheetCompanies, allData, selectedMonth, activeTab, addTotals]);
+      .filter(c => selectedMonth === 'all' || (c as any).sessions > 0 || (c as any).users > 0);
+
+    // For a specific month, add companies that appear in Artisan contacts but not yet in the list
+    if (selectedMonth !== 'all') {
+      const resultNames = new Set(result.map(c => normalizeName(c.name)));
+
+      // Build all-sheets company lookup for tab/revenue info
+      const allCompanyInfo = new Map<string, Company & { sheet: string }>();
+      for (const tab of TABS.filter(t => t.id !== 'all')) {
+        for (const c of (dedupedData[tab.sheet] ?? [])) {
+          const key = normalizeName(c.name);
+          if (!allCompanyInfo.has(key)) allCompanyInfo.set(key, { ...c, sheet: tab.sheet });
+        }
+      }
+
+      // Group Artisan contacts for the selected month by company
+      const artisanByCompany = new Map<string, { name: string; users: number; views: number }>();
+      for (const p of individuals) {
+        if (!p.company.trim() || p.company === '—') continue;
+        if (EXCLUDED_CONTACT_COMPANIES.has(p.company.toLowerCase())) continue;
+        if (artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
+        const key = normalizeName(p.company);
+        if (resultNames.has(key)) continue; // already in the list
+        const existing = artisanByCompany.get(key);
+        if (existing) { existing.users++; existing.views += p.pageViews || 1; }
+        else artisanByCompany.set(key, { name: p.company, users: 1, views: p.pageViews || 1 });
+      }
+
+      for (const [key, { name, users, views }] of artisanByCompany) {
+        const known = allCompanyInfo.get(key);
+        // Only add if the company is known (already in some tab) or we're in All Companies view
+        if (!known && activeTab !== 'all') continue;
+        const category = known
+          ? (TAB_LABELS[TABS.find(t => t.sheet === known.sheet)?.id ?? ''] ?? '')
+          : '';
+        result.push(addTotals({
+          name: known?.name ?? name,
+          revenue: known?.revenue ?? '',
+          months: { [selectedMonth]: { users, sessions: users, views } },
+          contacts: [],
+          category,
+        }));
+      }
+    }
+
+    return result.sort((a, b) => {
+      const au = (a as any).users ?? 0, bu = (b as any).users ?? 0;
+      if (bu !== au) return bu - au;
+      const asess = (a as any).sessions ?? 0, bsess = (b as any).sessions ?? 0;
+      if (bsess !== asess) return bsess - asess;
+      const av = (a as any).views ?? 0, bv = (b as any).views ?? 0;
+      return bv - av;
+    });
+  }, [sheetCompanies, dedupedData, allData, individuals, selectedMonth, activeTab, addTotals]);
 
   const filtered = useMemo(() => {
     let list = companiesWithTotals;
