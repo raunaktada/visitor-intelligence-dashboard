@@ -374,6 +374,37 @@ const EXCLUDED_CONTACT_COMPANIES = new Set([
   'qlik', 'sap', 'pendo.io', 'paylocity', 'insperity', 'sedgwick', 'trinet',
   'transplace', 'fedex logistics', 'echo global logistics', 'norfolk southern railroad',
   'tpg', 'wisdomtree asset management', 'xfinity', 'uniti group inc.',
+  // Schools & government
+  'baltimore city public schools', 'greenville county schools', 'frisco isd',
+  'richland school district one', 'arizona state university',
+  'california state assembly', 'city of fontana',
+  'office of maricopa county school superintendent steve watson',
+  'u.s. department of veterans affairs', 'va tennessee valley healthcare system',
+  // Nonprofits & associations
+  'ms society', 'the tb alliance', 'oakland livingston human service agency',
+  'united policyholders (up)', 'u.s. energy foundation', 'the virginia bar association',
+  'wtvp pbs',
+  // Small financial & PE
+  'union square advisors', 'frisch financial group, inc.', 'first analysis',
+  'plexus financial services, llc', 'eam (equality asset management)',
+  'invictus growth partners', 'denali growth partners', 'plymouth growth',
+  'wingman growth partners', 'tsg wealth management', 'turn/river capital',
+  'northwest bank', 'fhlb pittsburgh', 'granite insurance brokers',
+  'central bank of the bahamas',
+  // Small agencies, consulting & media
+  'mcallister & quinn', 'metric creative', 'studio v design', 'hks, inc.',
+  'improving', 'independent consultant', 'quadrant planning', 'c&s companies',
+  'clinch', 'emergence software', 'pricebook digital', 'posted social',
+  'pylon', 'xlr8 ai', 'xodus international group', 'skv group, llc',
+  '160over90', 'secretly group', 'abingdon press', 'rampart america',
+  // Small real estate & other
+  'mid-america real estate', 'continental properties', 'daniel communities',
+  'fitness u', 'hutson, inc.', 'j.t. blankinship, inc.',
+  'pearl engineering corporation', 'pearl technology', 'geerpres',
+  'supreme machined products', 'insulectro', 'faac parking solutions',
+  'ambius', 'agewave solutions, inc.', 'a&m biomedical inc.',
+  'nguyen\'s bookkeeping & income tax services', 'genex services, inc.',
+  'schnellecke logistics usa', 'loft',
 ]);
 
 const CONTACT_NAME_FIXES: Record<string, string> = {
@@ -690,9 +721,9 @@ export default function Dashboard() {
 
       for (const [key, { name, users, views }] of artisanByCompany) {
         const known = allCompanyInfo.get(key);
-        const knownTabId = known ? (TABS.find(t => t.sheet === known.sheet)?.id ?? '') : '';
-        if (!known && activeTab !== 'all') continue; // unknown → All Companies only
-        if (known && activeTab !== 'all' && knownTabId !== activeTab) continue; // wrong tab
+        if (!known) continue; // only add companies already in the dashboard
+        const knownTabId = TABS.find(t => t.sheet === known.sheet)?.id ?? '';
+        if (activeTab !== 'all' && knownTabId !== activeTab) continue; // wrong tab
         const category = known
           ? (TAB_LABELS[knownTabId] ?? '')
           : '';
