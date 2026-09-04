@@ -689,10 +689,11 @@ export default function Dashboard() {
 
       for (const [key, { name, users, views }] of artisanByCompany) {
         const known = allCompanyInfo.get(key);
-        // Only add if the company is known (already in some tab) or we're in All Companies view
-        if (!known && activeTab !== 'all') continue;
+        const knownTabId = known ? (TABS.find(t => t.sheet === known.sheet)?.id ?? '') : '';
+        if (!known && activeTab !== 'all') continue; // unknown → All Companies only
+        if (known && activeTab !== 'all' && knownTabId !== activeTab) continue; // wrong tab
         const category = known
-          ? (TAB_LABELS[TABS.find(t => t.sheet === known.sheet)?.id ?? ''] ?? '')
+          ? (TAB_LABELS[knownTabId] ?? '')
           : '';
         result.push(addTotals({
           name: known?.name ?? name,
