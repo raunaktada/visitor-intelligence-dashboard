@@ -394,6 +394,31 @@ const AUG_2026_PATCH: Record<string, { sheet: string; revenue?: string; aug: Mon
   'Park Nicollet Health Services':         { sheet: 'Healthcare_MedTech - 1B+', revenue: '$1.5',   aug: { users: 1, sessions: 1, views: 3 } },
 };
 
+// Sep 2026 visit data (VisitorIntel export), same shape as AUG_2026_PATCH; `aug` holds the Sep counts
+const SEP_2026_PATCH: Record<string, { sheet: string; revenue?: string; aug: MonthData }> = {
+  "General Mills Inc":                      { sheet: 'CPG - 1B+', aug: { users: 2, sessions: 2, views: 2 } },
+  "CNH Industrial":                         { sheet: 'Manufacturing - 1B+', aug: { users: 1, sessions: 2, views: 2 } },
+  "Target Brands, Inc":                     { sheet: 'CPG - 1B+', aug: { users: 1, sessions: 1, views: 2 } },
+  "Abbott":                                 { sheet: 'Healthcare_MedTech - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "Advocate Health Care":                   { sheet: 'Healthcare_MedTech - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "Edwards Lifesciences Corporation":       { sheet: 'Healthcare_MedTech - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "ICU Medical":                            { sheet: 'Healthcare_MedTech - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "LabCorp":                                { sheet: 'Healthcare_MedTech - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "OhioHealth":                             { sheet: 'Healthcare_MedTech - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "Stepan Company":                         { sheet: 'Manufacturing - 1B+', aug: { users: 1, sessions: 1, views: 1 } },
+  "Hexagon AB":                             { sheet: 'Manufacturing - 1B+', revenue: '$5.8', aug: { users: 1, sessions: 1, views: 2 } },
+  "Murata Manufacturing":                   { sheet: 'Manufacturing - 1B+', revenue: '$11.0', aug: { users: 1, sessions: 1, views: 1 } },
+  "Resideo Technologies Inc":               { sheet: 'Manufacturing - 1B+', revenue: '$7.3', aug: { users: 1, sessions: 1, views: 1 } },
+  "L3harris Geospatial":                    { sheet: 'Defense Manufacturers - 1B+', revenue: '$21.3', aug: { users: 1, sessions: 1, views: 1 } },
+  "Boot Barn":                              { sheet: 'CPG - 1B+', revenue: '$1.9', aug: { users: 2, sessions: 2, views: 2 } },
+  "Sysco Corporation":                      { sheet: 'CPG - 1B+', revenue: '$78.8', aug: { users: 2, sessions: 2, views: 3 } },
+  "Dollar General Corporation":             { sheet: 'CPG - 1B+', revenue: '$40.6', aug: { users: 1, sessions: 1, views: 1 } },
+  "Sam's Club":                             { sheet: 'CPG - 1B+', revenue: '$90.0', aug: { users: 1, sessions: 1, views: 1 } },
+  "Takeda":                                 { sheet: 'Healthcare_MedTech - 1B+', revenue: '$30.0', aug: { users: 1, sessions: 1, views: 1 } },
+  "Mayo Clinic":                            { sheet: 'Healthcare_MedTech - 1B+', revenue: '$17.0', aug: { users: 1, sessions: 1, views: 1 } },
+  "UCLA Health":                            { sheet: 'Healthcare_MedTech - 1B+', revenue: '$7.0', aug: { users: 1, sessions: 1, views: 1 } },
+};
+
 export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
   // Fetch new file + old file in parallel
   const oldSheetNames = Object.keys(OLD_TO_NEW);
@@ -457,6 +482,16 @@ export async function getAllSheetsData(): Promise<Record<string, Company[]>> {
       existing.months['Aug 2026'] = aug;
     } else {
       result[sheet].push({ name, revenue: revenue ?? '', months: { 'Aug 2026': aug }, contacts: [] });
+    }
+  }
+
+  for (const [name, { sheet, revenue, aug }] of Object.entries(SEP_2026_PATCH)) {
+    if (!result[sheet]) continue;
+    const existing = result[sheet].find(c => c.name.toLowerCase() === name.toLowerCase());
+    if (existing) {
+      existing.months['Sep 2026'] = aug;
+    } else {
+      result[sheet].push({ name, revenue: revenue ?? '', months: { 'Sep 2026': aug }, contacts: [] });
     }
   }
 
