@@ -28,6 +28,14 @@ function artisanMonth(lastSeenAt: string): string {
   return `${month} ${yyyy}`;
 }
 
+// "28-09-2026 12:00" → "28 Sep 2026"
+function fmtVisitDate(lastSeenAt: string): string {
+  const [dd, mm, yyyy] = (lastSeenAt.split(' ')[0] ?? '').split('-');
+  if (!dd || !mm || !yyyy) return '';
+  const month = new Date(Number(yyyy), Number(mm) - 1).toLocaleString('en-US', { month: 'short' });
+  return `${Number(dd)} ${month} ${yyyy}`;
+}
+
 const TABS: { id: TabId; label: string; sheet: string }[] = [
   { id: 'all',           label: 'All Companies',        sheet: '' },
   { id: 'customers',     label: 'Customers & Partners', sheet: 'Customers & Partners' },
@@ -779,7 +787,20 @@ export default function Dashboard() {
       }
     }
 
-    const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string }[] = [];
+    // company → industry + revenue, across every tab
+    const companyLookup = new Map<string, { industry: string; revenue: string }>();
+    for (const tab of TABS.filter(t => t.id !== 'all')) {
+      for (const c of (dedupedData[tab.sheet] ?? [])) {
+        const key = normalizeName(c.name);
+        if (companyLookup.has(key)) continue;
+        const lc = c.name.toLowerCase();
+        const industry = c.category || UNDER1B_CATEGORIES[lc] || MFG_CATEGORIES[lc] || CPG_CATEGORIES[lc] || HEALTHCARE_CATEGORIES[lc] || TAB_LABELS[tab.id] || '';
+        companyLookup.set(key, { industry, revenue: cleanRevenue(c.revenue) });
+      }
+    }
+    const extra = (company: string) => companyLookup.get(normalizeName(company)) ?? { industry: '', revenue: '' };
+
+    const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string; visitDate: string; industry: string; revenue: string }[] = [];
     const seen = new Set<string>();
 
     // SharePoint contacts — only in All Time (no per-person visit dates available)
@@ -792,7 +813,7 @@ export default function Dashboard() {
           const key = contactNameKey(rawName);
           if (seen.has(key)) continue;
           seen.add(key);
-          contacts.push({ ...p, name: rawName, title: rawTitle, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint' });
+          contacts.push({ ...p, name: rawName, title: rawTitle, pageViewed: String(p.pageViewed ?? ''), company: c.name, source: 'sharepoint', visitDate: '', ...extra(c.name) });
         }
       }
     }
@@ -825,13 +846,14 @@ export default function Dashboard() {
       contacts.push({
         name: fullName, title: p.title, company: p.company, email: p.email,
         linkedin: p.linkedin, pageViewed: String(p.pageViews || ''), source: 'artisan',
+        visitDate: fmtVisitDate(p.lastSeenAt), ...extra(p.company),
       });
     }
 
     // Sort by company name so contacts from the same company are grouped together
     contacts.sort((a, b) => a.company.localeCompare(b.company));
     return contacts;
-  }, [sheetCompanies, allData, individuals, activeTab, selectedMonth]);
+  }, [sheetCompanies, allData, dedupedData, individuals, activeTab, selectedMonth]);
 
   const filteredContacts = useMemo(() => {
     if (!search) return tabContacts;
@@ -899,6 +921,7 @@ export default function Dashboard() {
       if (!filteredContacts.length) return;
       const rows = filteredContacts.map(c => ({
         'Name': c.name, 'Title': c.title, 'Company': c.company,
+        'Industry': c.industry, 'Revenue (Billions)': c.revenue, 'Visit Date': c.visitDate,
         'Email': c.email, 'LinkedIn': c.linkedin,
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), currentTabLabel.substring(0, 31));
@@ -930,7 +953,7 @@ export default function Dashboard() {
             .filter(c => selectedMonth === 'all' || (c.months[selectedMonth]?.users || c.months[selectedMonth]?.sessions))
             .map(c => normalizeName(c.name)));
           const seen = new Set<string>();
-          const rows: { Name: string; Title: string; Company: string; Email: string; LinkedIn: string }[] = [];
+          const rows: { Name: string; Title: string; Company: string; Industry: string; 'Revenue (Billions)': string; 'Visit Date': string; Email: string; LinkedIn: string }[] = [];
           for (const c of tabSheetCompanies) {
             for (const p of c.contacts) {
               const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
@@ -939,7 +962,7 @@ export default function Dashboard() {
               const key = contactNameKey(rawName);
               if (seen.has(key)) continue;
               seen.add(key);
-              rows.push({ Name: rawName, Title: rawTitle, Company: c.name, Email: p.email, LinkedIn: p.linkedin });
+              rows.push({ Name: rawName, Title: rawTitle, Company: c.name, Industry: c.category || tab.label, 'Revenue (Billions)': cleanRevenue(c.revenue), 'Visit Date': '', Email: p.email, LinkedIn: p.linkedin });
             }
           }
           if (!rows.length) continue;
@@ -1038,17 +1061,20 @@ export default function Dashboard() {
           <table className="visitors-table">
             <thead>
               <tr>
-                <th>Name</th><th>Title</th><th>Company</th><th>Email</th><th className="num-col">Page Views</th><th>LinkedIn</th>
+                <th>Name</th><th>Title</th><th>Company</th><th>Industry</th><th className="num-col">Revenue (B)</th><th>Visit Date</th><th>Email</th><th className="num-col">Page Views</th><th>LinkedIn</th>
               </tr>
             </thead>
             <tbody>
               {filteredContacts.length === 0 ? (
-                <tr><td colSpan={6} className="empty-state">No contacts found</td></tr>
+                <tr><td colSpan={9} className="empty-state">No contacts found</td></tr>
               ) : filteredContacts.map((p, i) => (
                 <tr key={i}>
                   <td>{p.name}</td>
                   <td className="secondary-text">{p.title}</td>
                   <td>{p.company}</td>
+                  <td className="secondary-text">{p.industry}</td>
+                  <td className="num-col">{p.revenue}</td>
+                  <td className="secondary-text">{p.visitDate}</td>
                   <td className="secondary-text">{p.email}</td>
                   <td className="num-col">
                     {p.pageViewed?.startsWith('http')
