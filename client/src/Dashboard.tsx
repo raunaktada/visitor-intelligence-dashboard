@@ -505,6 +505,7 @@ const EXCLUDED_CONTACT_COMPANIES = new Set([
   'northwestern mutual', 'wells fargo advisors', 'ameriprise financial services, inc.',
   'qlik', 'sap', 'pendo.io', 'paylocity', 'insperity', 'sedgwick', 'trinet',
   'transplace', 'fedex logistics', 'echo global logistics', 'norfolk southern railroad',
+  'tadanow', 'tada now', 'stealth startup', '13 on your side',
   'tpg', 'wisdomtree asset management', 'xfinity', 'uniti group inc.',
   // Schools & government
   'baltimore city public schools', 'greenville county schools', 'frisco isd',
@@ -694,7 +695,7 @@ export default function Dashboard() {
   const [allData,       setAllData]       = useState<Record<string, Company[]>>({});
   const [individuals,   setIndividuals]   = useState<Individual[]>([]);
   // industry + revenue range for contact companies that are not in the dashboard tabs (from Artisan exports)
-  const [contactInfo,   setContactInfo]   = useState<Record<string, { industry: string; revenue: string }>>({});
+  const [contactInfo,   setContactInfo]   = useState<Record<string, { industry: string; revenue: string; small?: boolean }>>({});
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
@@ -963,6 +964,14 @@ export default function Dashboard() {
       if (!p.company.trim() || p.company === '—') continue;
       if (p.company.toLowerCase() === 'tada') continue;
       if (EXCLUDED_CONTACT_COMPANIES.has(p.company.toLowerCase())) continue;
+      // Companies outside the dashboard tabs: drop unidentified ones and anything under $250M
+      const ck = normalizeName(p.company);
+      if (!companyLookup.has(ck)) {
+        const ci = contactInfo[ck];
+        if (!ci || !ci.industry || ci.small) continue;
+        const nums = (ci.revenue.match(/[\d.]+/g) ?? []).map(Number);
+        if (nums.length && Math.max(...nums) < 0.25) continue;
+      }
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
       if (activeTab !== 'all') {
         const knownInThisTab = tabCompanyNames.has(normalizeName(p.company));
