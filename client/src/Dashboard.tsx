@@ -28,8 +28,12 @@ function artisanMonth(lastSeenAt: string): string {
   return `${month} ${yyyy}`;
 }
 
+const SEP_PLACEHOLDER_DATE = '28-09-2026 12:00';
+
 // "28-09-2026 12:00" → "28 Sep 2026"
 function fmtVisitDate(lastSeenAt: string): string {
+  // 28-09-2026 12:00 is a placeholder (Artisan export date), not a real visit date: keeps the row in Sep 2026 but shows no date
+  if (lastSeenAt === SEP_PLACEHOLDER_DATE) return '';
   const [dd, mm, yyyy] = (lastSeenAt.split(' ')[0] ?? '').split('-');
   if (!dd || !mm || !yyyy) return '';
   const month = new Date(Number(yyyy), Number(mm) - 1).toLocaleString('en-US', { month: 'short' });
