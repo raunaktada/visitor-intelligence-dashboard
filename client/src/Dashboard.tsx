@@ -693,6 +693,8 @@ function ColumnFilterPopover({ label, filter, onChange }: {
 export default function Dashboard() {
   const [allData,       setAllData]       = useState<Record<string, Company[]>>({});
   const [individuals,   setIndividuals]   = useState<Individual[]>([]);
+  // industry + revenue range for contact companies that are not in the dashboard tabs (from Artisan exports)
+  const [contactInfo,   setContactInfo]   = useState<Record<string, { industry: string; revenue: string }>>({});
   const [loading,       setLoading]       = useState(true);
   const [error,         setError]         = useState('');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
@@ -710,9 +712,11 @@ export default function Dashboard() {
     Promise.all([
       fetch(`${API_URL}/api/visitors`).then(r => r.json()),
       fetch('/data/individuals-all.csv').then(r => r.text()).then(parseIndividuals).catch(() => []),
-    ]).then(([data, inds]) => {
+      fetch('/data/contact-company-info.json').then(r => r.json()).catch(() => ({})),
+    ]).then(([data, inds, info]) => {
       setAllData(data);
       setIndividuals(inds);
+      setContactInfo(info);
       setLoading(false);
     }).catch(() => { setError('Failed to load data.'); setLoading(false); });
   }, []);
@@ -923,7 +927,10 @@ export default function Dashboard() {
         companyLookup.set(key, { industry, revenue: cleanRevenue(c.revenue) });
       }
     }
-    const extra = (company: string) => companyLookup.get(normalizeName(company)) ?? { industry: '', revenue: '' };
+    const extra = (company: string) => {
+      const k = normalizeName(company);
+      return companyLookup.get(k) ?? contactInfo[k] ?? { industry: '', revenue: '' };
+    };
 
     const contacts: { name: string; title: string; company: string; email: string; linkedin: string; pageViewed: string; source: string; visitDate: string; industry: string; revenue: string }[] = [];
     const seen = new Set<string>();
@@ -978,7 +985,7 @@ export default function Dashboard() {
     // Sort by company name so contacts from the same company are grouped together
     contacts.sort((a, b) => a.company.localeCompare(b.company));
     return contacts;
-  }, [sheetCompanies, allData, dedupedData, individuals, activeTab, selectedMonth]);
+  }, [sheetCompanies, allData, dedupedData, individuals, contactInfo, activeTab, selectedMonth]);
 
   const filteredContacts = useMemo(() => {
     if (!search) return tabContacts;
