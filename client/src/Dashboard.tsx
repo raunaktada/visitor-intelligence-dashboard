@@ -330,6 +330,127 @@ const TAB_LABELS: Record<string, string> = {
   under1b: 'Under $1B',
 };
 
+// Specific industry per company (falls back to MFG/HEALTHCARE/CPG/UNDER1B maps below)
+const INDUSTRY_OVERRIDES: Record<string, string> = {
+  'caterpillar':                                 'Industrial Machinery & Equipment',
+  'cummins inc.':                                'Industrial Machinery & Equipment',
+  'pointcore':                                   'Industrial Machinery & Equipment',
+  'rockwell automation':                         'Industrial Machinery & Equipment',
+  'john deere':                                  'Industrial Machinery & Equipment',
+  '3m':                                          'Industrial Machinery & Equipment',
+  'parker hannifin':                             'Industrial Machinery & Equipment',
+  'ge healthcare':                               'Medical Devices & Equipment',
+  'steris':                                      'Medical Devices & Equipment',
+  'boston scientific corporation':               'Medical Devices & Equipment',
+  'osf healthcare system':                       'Hospitals & Health Systems',
+  "children's minnesota":                       'Hospitals & Health Systems',
+  "children's healthcare of atlanta":           'Hospitals & Health Systems',
+  "children's hospital colorado":               'Hospitals & Health Systems',
+  "texas children's hospital":                  'Hospitals & Health Systems',
+  'ohiohealth':                                  'Hospitals & Health Systems',
+  'kaiser permanente':                           'Hospitals & Health Systems',
+  'lifebridge health':                           'Hospitals & Health Systems',
+  'northshore university healthsystem':          'Hospitals & Health Systems',
+  "st. luke's university health network":       'Hospitals & Health Systems',
+  'park nicollet health services':               'Hospitals & Health Systems',
+  'mayo clinic':                                 'Hospitals & Health Systems',
+  'ucla health':                                 'Hospitals & Health Systems',
+  'oshkosh':                                     'Automotive & Mobility',
+  'the wheel group':                             'Automotive & Mobility',
+  'zoox':                                        'Automotive & Mobility',
+  'ford motor company':                          'Automotive & Mobility',
+  'bridgestone americas inc.':                   'Automotive & Mobility',
+  'steelscape':                                  'Building Materials & Construction',
+  'oshkosh defense':                             'Aerospace & Defense',
+  'boeing':                                      'Aerospace & Defense',
+  'collins aerospace':                           'Aerospace & Defense',
+  'general dynamics mission systems, inc.':      'Aerospace & Defense',
+  'moog inc':                                    'Aerospace & Defense',
+  'lockheed martin':                             'Aerospace & Defense',
+  'kbr inc.':                                    'Aerospace & Defense',
+  'y-12 national security complex':              'Aerospace & Defense',
+  'l3harris geospatial':                         'Aerospace & Defense',
+  'intel corporation':                           'Semiconductors',
+  'lam research corporation':                    'Semiconductors',
+  'nvidia corporation':                          'Semiconductors',
+  'tsmc':                                        'Semiconductors',
+  'stmicroelectronics':                          'Semiconductors',
+  'teradyne inc':                                'Semiconductors',
+  'texas instruments':                           'Semiconductors',
+  'panduit':                                     'Electronics, Electrical & Technology',
+  'trimble inc':                                 'Electronics, Electrical & Technology',
+  'vishay intertechnology':                      'Electronics, Electrical & Technology',
+  'first solar':                                 'Electronics, Electrical & Technology',
+  'zeiss industrial quality solutions':          'Electronics, Electrical & Technology',
+  'hexagon ab':                                  'Electronics, Electrical & Technology',
+  'murata manufacturing':                        'Electronics, Electrical & Technology',
+  'resideo technologies inc':                    'Electronics, Electrical & Technology',
+  'cargill':                                     'Food & Beverage',
+  'ferrero asia limited':                        'Food & Beverage',
+  'general mills inc':                           'Food & Beverage',
+  'mars':                                        'Food & Beverage',
+  'nestle':                                      'Food & Beverage',
+  'pepsico':                                     'Food & Beverage',
+  'rich products corporation':                   'Food & Beverage',
+  'flowers foods':                               'Food & Beverage',
+  'ben e. keith foods':                          'Food & Beverage',
+  'adm':                                         'Food & Beverage',
+  'sysco corporation':                           'Food & Beverage',
+  'r.j. reynolds tobacco company':               'Tobacco',
+  'canadian tire corporation':                   'Retail',
+  "kohl's":                                     'Retail',
+  "lowe's":                                     'Retail',
+  "macy's":                                     'Retail',
+  "macy's, inc":                                'Retail',
+  'petsmart':                                    'Retail',
+  'staples':                                     'Retail',
+  'target brands, inc':                          'Retail',
+  'the tjx companies, inc':                      'Retail',
+  'wayfair llc':                                 'Retail',
+  'ulta beauty':                                 'Retail',
+  'nordstrom':                                   'Retail',
+  'home depot':                                  'Retail',
+  "bj's wholesale club, inc":                   'Retail',
+  'walmart':                                     'Retail',
+  'boot barn':                                   'Retail',
+  'dollar general corporation':                  'Retail',
+  "sam's club":                                 'Retail',
+  'h-e-b':                                       'Retail & Grocery',
+  'southeastern grocers':                        'Retail & Grocery',
+  'colgate-palmolive company':                   'Personal Care & Household',
+  'kenvue':                                      'Personal Care & Household',
+  'procter & gamble':                            'Personal Care & Household',
+  'reckitt benckiser group plc':                 'Personal Care & Household',
+  'unilever':                                    'Personal Care & Household',
+  'estee lauder companies':                      'Personal Care & Beauty',
+  'the avon company':                            'Personal Care & Beauty',
+  'coty inc':                                    'Personal Care & Beauty',
+  'crocs':                                       'Apparel & Footwear',
+  'under armour':                                'Apparel & Footwear',
+  'vf':                                          'Apparel & Footwear',
+  'converse':                                    'Apparel & Footwear',
+  'kellwood company':                            'Apparel & Footwear',
+  'coach':                                       'Apparel & Accessories',
+  'tiffany & co.':                               'Apparel & Accessories',
+  'tory burch':                                  'Apparel & Accessories',
+  'amerigas propane, inc.':                      'Energy & Utilities',
+  'taylor corporation':                          'Packaging, Paper & Printing',
+  'pactiv evergreen inc.':                       'Packaging, Paper & Printing',
+  'fxi':                                         'Consumer Products & Appliances',
+  'mattel':                                      'Consumer Products & Appliances',
+  "dr. reddy's laboratories":                   'Pharma & Life Sciences',
+  'merck & co., inc':                            'Pharma & Life Sciences',
+  'takeda':                                      'Pharma & Life Sciences',
+  'aspen dental management':                     'Healthcare IT & Services',
+  'labcorp':                                     'Healthcare IT & Services',
+  'wipro':                                       'IT Services',
+};
+
+function industryFor(name: string): string {
+  const k = name.toLowerCase();
+  return INDUSTRY_OVERRIDES[k] || MFG_CATEGORIES[k] || HEALTHCARE_CATEGORIES[k] || CPG_CATEGORIES[k] || UNDER1B_CATEGORIES[k] || '';
+}
+
 const API_URL = import.meta.env.PROD ? '' : ((import.meta.env.VITE_API_URL as string) || 'http://localhost:5001');
 
 function revenueInBillions(cleaned: string): number {
@@ -666,15 +787,16 @@ export default function Dashboard() {
   // Company view: Sales Intel data only, sorted by sessions desc
   const addTotals = useCallback((c: Company) => {
     const category = c.category || UNDER1B_CATEGORIES[c.name.toLowerCase()] || MFG_CATEGORIES[c.name.toLowerCase()] || CPG_CATEGORIES[c.name.toLowerCase()] || HEALTHCARE_CATEGORIES[c.name.toLowerCase()] || '';
+    const industry = industryFor(c.name) || category;
     if (selectedMonth === 'all') {
       const t = Object.values(c.months).reduce(
         (a, m) => ({ users: a.users + m.users, sessions: a.sessions + m.sessions, views: a.views + m.views }),
         { users: 0, sessions: 0, views: 0 }
       );
-      return { ...c, category, revenue: cleanRevenue(c.revenue), ...t };
+      return { ...c, category, industry, revenue: cleanRevenue(c.revenue), ...t };
     }
     const m = c.months[selectedMonth] ?? { users: 0, sessions: 0, views: 0 };
-    return { ...c, category, revenue: cleanRevenue(c.revenue), ...m };
+    return { ...c, category, industry, revenue: cleanRevenue(c.revenue), ...m };
   }, [selectedMonth]);
 
   const companiesWithTotals = useMemo(() => {
@@ -764,7 +886,7 @@ export default function Dashboard() {
     if (search) {
       const q = search.toLowerCase();
       list = list.filter(c =>
-        c.name.toLowerCase().includes(q) || (c.category ?? '').toLowerCase().includes(q)
+        c.name.toLowerCase().includes(q) || (c.category ?? '').toLowerCase().includes(q) || ((c as any).industry ?? '').toLowerCase().includes(q)
       );
     }
     const activeCols = (Object.keys(columnFilters) as FilterableCol[]).filter(k => columnFilters[k]);
@@ -798,7 +920,7 @@ export default function Dashboard() {
         const key = normalizeName(c.name);
         if (companyLookup.has(key)) continue;
         const lc = c.name.toLowerCase();
-        const industry = c.category || UNDER1B_CATEGORIES[lc] || MFG_CATEGORIES[lc] || CPG_CATEGORIES[lc] || HEALTHCARE_CATEGORIES[lc] || TAB_LABELS[tab.id] || '';
+        const industry = industryFor(c.name) || c.category || TAB_LABELS[tab.id] || '';
         companyLookup.set(key, { industry, revenue: cleanRevenue(c.revenue) });
       }
     }
@@ -934,7 +1056,7 @@ export default function Dashboard() {
     } else {
       if (!filtered.length) return;
       const rows = filtered.map(c => ({
-        'Company Name': c.name, 'Revenue (Billions)': c.revenue,
+        'Company Name': c.name, 'Industry': (c as any).industry, 'Revenue (Billions)': c.revenue,
         Users: (c as any).users, Sessions: (c as any).sessions, Views: (c as any).views,
       }));
       XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), currentTabLabel.substring(0, 31));
@@ -986,6 +1108,7 @@ export default function Dashboard() {
           if (!companies.length) continue;
           const rows = companies.map(c => ({
             'Company Name': c.name,
+            'Industry': (c as any).industry,
             'Revenue (Billions)': c.revenue,
             Users: (c as any).users,
             Sessions: (c as any).sessions,
@@ -1006,7 +1129,7 @@ export default function Dashboard() {
   };
 
   const showCategory = activeTab === 'under1b' || activeTab === 'all';
-  const colSpan = showCategory ? 6 : 5;
+  const colSpan = showCategory ? 7 : 6;
 
   return (
     <div className="dashboard">
@@ -1105,6 +1228,7 @@ export default function Dashboard() {
                   </div>
                 </th>
                 {showCategory && <th>Category</th>}
+                <th>Industry</th>
                 <th className="num-col">
                   <div className="th-content">
                     <span>Users</span>
@@ -1136,6 +1260,7 @@ export default function Dashboard() {
                   <td>{c.name}</td>
                   <td className="secondary-text">{c.revenue}</td>
                   {showCategory && <td className="secondary-text">{c.category}</td>}
+                  <td className="secondary-text">{(c as any).industry}</td>
                   <td className="num-col">{(c as any).users || 0}</td>
                   <td className="num-col">{(c as any).sessions || 0}</td>
                   <td className="num-col">{(c as any).views || 0}</td>
