@@ -339,6 +339,7 @@ const EXCLUDED_COMPANIES = new Set([
   'eyebuydirect',
   'gsfsgroup',
   'sb energy',
+  'zoox',
   'sos international llc',
   'world market',
   'the tile shop',
@@ -543,7 +544,6 @@ const AUG_2026_PATCH: Record<string, { sheet: string; revenue?: string; aug: Mon
   'Tory Burch':               { sheet: 'CPG - 1B+',               revenue: '$1.8',  aug: { users: 1, sessions: 1, views: 1 } },
   'Kellwood Company':         { sheet: 'CPG - 1B+',               revenue: '$1.0',  aug: { users: 1, sessions: 1, views: 1 } },
   'Y-12 National Security Complex': { sheet: 'Defense Manufacturers - 1B+', revenue: '$2.8', aug: { users: 1, sessions: 2, views: 2 } },
-  'Zoox':                     { sheet: 'Data Center Mfg - 1B+',    revenue: '$1.0',  aug: { users: 1, sessions: 1, views: 2 } },
   // Added from Artisan contacts — new companies
   'Ford Motor Company':                    { sheet: 'Manufacturing - 1B+',      revenue: '$187.3', aug: { users: 1, sessions: 1, views: 3 } },
   'John Deere':                            { sheet: 'Manufacturing - 1B+',      revenue: '$45.7',  aug: { users: 1, sessions: 1, views: 2 } },

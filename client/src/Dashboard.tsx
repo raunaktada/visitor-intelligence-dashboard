@@ -357,7 +357,6 @@ const INDUSTRY_OVERRIDES: Record<string, string> = {
   'ucla health':                                 'Hospitals & Health Systems',
   'oshkosh':                                     'Automotive & Mobility',
   'the wheel group':                             'Automotive & Mobility',
-  'zoox':                                        'Automotive & Mobility',
   'ford motor company':                          'Automotive & Mobility',
   'bridgestone americas inc.':                   'Automotive & Mobility',
   'steelscape':                                  'Building Materials & Construction',
