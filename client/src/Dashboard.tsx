@@ -943,6 +943,7 @@ export default function Dashboard() {
           const rawName = CONTACT_NAME_FIXES[contactNameKey(p.name)] ?? p.name;
           const rawTitle = CONTACT_TITLE_FIXES[p.title.toLowerCase()] ?? p.title;
           if (!isRelevantContact(rawTitle)) continue;
+          if (!extra(c.name).revenue) continue;
           const key = contactNameKey(rawName);
           if (seen.has(key)) continue;
           seen.add(key);
@@ -972,6 +973,7 @@ export default function Dashboard() {
         const nums = (ci.revenue.match(/[\d.]+/g) ?? []).map(Number);
         if (nums.length && Math.max(...nums) < 0.25) continue;
       }
+      if (!extra(p.company).revenue) continue; // no revenue on record → not shown
       if (selectedMonth !== 'all' && artisanMonth(p.lastSeenAt) !== selectedMonth) continue;
       if (activeTab !== 'all') {
         const knownInThisTab = tabCompanyNames.has(normalizeName(p.company));
